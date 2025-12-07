@@ -1,2 +1,2 @@
-# smart-queue-flask-backend
-Graduation Project: Smart Queue Backend made in Flask
+# smart-queue-django-backend
+Graduation Project: Smart Queue Backend made in Django
