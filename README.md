@@ -3,9 +3,9 @@
 Smart Queue Management system for government offices and service centers.
 Service backend is built with **Django**.
 
----
+## Getting Started
 
-## Prerequisites
+### Prerequisites
 
 Make sure to install the following:
 
@@ -15,60 +15,73 @@ Make sure to install the following:
 
 Install Pipenv using python package manager:
 
-```bash
-pip install pipenv
-```
+- pip
+  ```bash
+  pip install pipenv
+  ```
 
----
+### Installation
 
-## Getting Started
+1. Clone the repo
 
-1. install dependencies
+   ```sh
+   git clone https://github.com/ah00819/smart-queue-backend.git
 
-```bash
-pipenv insall
-pipenv shell
-```
+   ```
 
-set your project's python environment to pipenv's
+2. Change git remote url to avoid accidental pushes to base project
 
-2. Create the database in MySQL
+   ```sh
+   git remote set-url origin github_username/repo_name
+   git remote -v # confirm the changes
+   ```
 
-```sql
-CREATE DATABASE smart_queue
-```
+3. install project dependencies
 
-3. Go to Django settings file
+   ```sh
+   pipenv install
+   pipenv shell
+   ```
 
-```bash
-smart_queue/settings.py
-```
+   set your project's python environment to pipenv's
 
-Update the <mark>DATABASES</mark> Configuration with your local MySQL credentials
+4. Create the database in MySQL
 
-```py
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "smart_queue",
-        "HOST": "localhost",
-        "USER": "root",
-        "PASSWORD": "root",
-    }
-}
-```
+   ```sql
+   CREATE DATABASE smart_queue
+   ```
 
-4. Run migrations to create the database schema
+5. Go to Django settings file
 
-```bash
-python manage.py migrate
-```
+   ```sh
+   smart_queue/settings.py
+   ```
 
-5. Start the Server, in your python environment Run
+   Update the `DATABASES` Configuration with your local MySQL credentials
 
-```bash
-python manage.py runserver
-```
+   ```py
+   DATABASES = {
+       "default": {
+           "ENGINE": "django.db.backends.mysql",
+           "NAME": "smart_queue",
+           "HOST": "localhost",
+           "USER": "root",
+           "PASSWORD": "root",
+       }
+   }
+   ```
+
+6. Run migrations to create the database schema
+
+   ```sh
+   python manage.py migrate
+   ```
+
+7. Start the Server, in your python environment Run
+
+   ```sh
+   python manage.py runserver
+   ```
 
 ---
 
@@ -76,6 +89,6 @@ python manage.py runserver
 
 To access the Admin Panel, you must first create a superuser account:
 
-```bash
+```sh
 python manage.py createsuperuser
 ```
