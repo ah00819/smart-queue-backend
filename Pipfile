@@ -12,8 +12,11 @@ drf-nested-routers = "*"
 django-filter = "*"
 djangorestframework-simplejwt = "*"
 djoser = "*"
+django-appointment = "*"
+django-phonenumber-field = {extras = ["phonenumbers"], version = "*"}
 
 [dev-packages]
+pylint-django = "*"
 
 [requires]
 python_version = "3.13"
