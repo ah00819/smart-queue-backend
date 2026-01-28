@@ -56,6 +56,9 @@ class Address(models.Model):
         help_text=_("GPS Longitude"),
     )
 
+    def __str__(self) -> str:
+        return f"{self.address}, {self.city}, {self.country}"
+
     class Meta:
         verbose_name = _("Address")
         verbose_name_plural = _("Addresses")
@@ -116,6 +119,9 @@ class ServiceCounter(models.Model):
         help_text=_("Service this counter offers"),
     )
     is_operational = models.BooleanField(default=True, verbose_name=_("Is Operational"))
+
+    def __str__(self):
+        return f"{self.name} offers {self.service}"
 
     class Meta:
         verbose_name = _("Service Counter")
