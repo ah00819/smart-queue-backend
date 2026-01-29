@@ -1,6 +1,7 @@
 services
 .vscode
 media/api/images/*
+Routes.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

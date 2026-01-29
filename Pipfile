@@ -17,6 +17,9 @@ django-phonenumber-field = {extras = ["phonenumbers"], version = "*"}
 
 [dev-packages]
 pylint-django = "*"
+pytest = "*"
+pytest-django = "*"
+model-bakery = "*"
 
 [requires]
 python_version = "3.13"

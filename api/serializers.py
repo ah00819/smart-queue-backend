@@ -13,10 +13,14 @@ from appointment.models import (
     WorkingHours,
 )
 from .models import Organization, Address, Branch, ServiceCounter
+from django.contrib.auth import get_user_model
+
+
+User = get_user_model()
 
 
 class SimpleServiceSerializer(serializers.ModelSerializer):
-    price = serializers.SerializerMethodField()
+    price = serializers.CharField(source="get_price_text", read_only=True)
 
     def get_price(self, service: Service):
         return service.get_price_text()
@@ -24,6 +28,7 @@ class SimpleServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = [
+            "id",
             "name",
             "description",
             "price",
@@ -39,6 +44,7 @@ class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = [
+            "id",
             "name",
             "description",
             "duration",
@@ -63,7 +69,44 @@ class SimpleStaffMemberSerializer(serializers.ModelSerializer):
         fields = ["id", "fullname", "email"]
 
 
+class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "full_name", "email"]
+
+
+class WorkingHoursSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkingHours
+        fields = ["id", "day_of_week", "start_time", "end_time"]
+
+
 class StaffMemberSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    services_offered = serializers.StringRelatedField(many=True)
+    working_hours = WorkingHoursSerializer(
+        read_only=True, many=True, source="workinghours_set"
+    )
+
+    class Meta:
+        model = StaffMember
+        fields = [
+            "id",
+            "user",
+            "services_offered",
+            "slot_duration",
+            "lead_time",
+            "finish_time",
+            "appointment_buffer_time",
+            "work_on_saturday",
+            "work_on_sunday",
+            "working_hours",
+        ]
+
+
+class CreateStaffMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = StaffMember
         fields = [
@@ -123,6 +166,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         label=_("Address"),
         help_text=_("Does not have to be specific, just the city and the country"),
     )
+
     # chagned initial to True
     want_reminder = serializers.BooleanField(
         initial=True,
@@ -147,18 +191,39 @@ class AppointmentSerializer(serializers.ModelSerializer):
             # NOTE: I don't know what id_request is used for.
             "id_request",  # An ID for the appointment.
         ]
+        read_only_fields = ["client", "id_request"]
 
 
 class ConfigSerializer(serializers.ModelSerializer):
+    """App Global Configurations"""
+
     class Meta:
         model = Config
-        fields = "__all__"
+        fields = [
+            "id",
+            "slot_duration",
+            "lead_time",
+            "finish_time",
+            "appointment_buffer_time",
+            "website_name",
+            "app_offered_by_label",
+            "default_reschedule_limit",
+            "allow_staff_change_on_reschedule",
+        ]
 
 
 class PaymentInfoSerializer(serializers.ModelSerializer):
+    appointment = AppointmentSerializer(read_only=True)
+
     class Meta:
         model = PaymentInfo
-        fields = "__all__"
+        fields = ["id", "appointment"]
+
+
+class CreatePaymentInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentInfo
+        fields = ["id", "appointment"]
 
 
 class DayOffSerializer(serializers.ModelSerializer):
@@ -172,13 +237,7 @@ class DayOffSerializer(serializers.ModelSerializer):
 class CreateDayOffSerializer(serializers.ModelSerializer):
     class Meta:
         model = DayOff
-        fields = ["id", "staff_member", "start_date", "end_date", "description"]
-
-
-class WorkingHoursSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WorkingHours
-        fields = "__all__"
+        fields = ["staff_member", "start_date", "end_date", "description"]
 
 
 class OrganizationSerializer(serializers.ModelSerializer):

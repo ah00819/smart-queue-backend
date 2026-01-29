@@ -12,12 +12,36 @@ router.register("configs", views.ConfigViewSet, basename="configs")
 router.register("days-off", views.DayOffViewSet, basename="days-off")
 router.register("payment-infos", views.PaymentInfoViewSet, basename="payment-infos")
 router.register("staff-members", views.StaffMemberViewSet, basename="staff-members")
-router.register("working-hours", views.WorkingHoursViewSet, basename="working-hours")
 router.register("services", views.ServiceViewSet, basename="services")
 router.register("organizations", views.OrganizationViewSet, basename="organizations")
 router.register("branches", views.BranchViewSet, basename="branches")
 router.register(
     "service-counters", views.ServiceCounterViewSet, basename="service-counters"
 )
+# =================================================
+organizations_router = routers.NestedDefaultRouter(
+    router, "organizations", lookup="organization"
+)
+organizations_router.register(
+    "branches", views.BranchViewSet, basename="organization-branches"
+)
+# =================================================
+branches_router = routers.NestedDefaultRouter(router, "branches", lookup="branch")
+branches_router.register(
+    "service-counters", views.ServiceCounterViewSet, basename="branch-service-coutners"
+)
+# =================================================
+staff_members_router = routers.NestedDefaultRouter(
+    router, "staff-members", lookup="staff_member"
+)
+staff_members_router.register(
+    "working-hours", views.WorkingHoursViewSet, basename="staff-member-working-hours"
+)
+# =================================================
 
-urlpatterns = router.urls
+urlpatterns = (
+    router.urls
+    + organizations_router.urls
+    + branches_router.urls
+    + staff_members_router.urls
+)

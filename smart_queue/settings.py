@@ -96,7 +96,7 @@ DATABASES = {
         # NOTE: This is be temprary; during development
         "HOST": "localhost",
         "USER": "root",
-        "PASSWORD": "root",
+        "PASSWORD": "Myroot$21#",
     }
 }
 
