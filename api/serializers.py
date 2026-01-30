@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from appointment.models import (
@@ -12,46 +13,37 @@ from appointment.models import (
     WorkingHours,
 )
 from .validators import ExactLengthValidator
-from .models import Client, Organization, Address, Branch, ServiceCounter
+from .models import STAFF_GROUP, Client, Organization, Address, Branch, ServiceCounter
 
 
-class SimpleAddressSerializer(serializers.ModelSerializer):
-    address = serializers.SerializerMethodField()
-
-    def get_address(self, address: Address):
-        return f"{address.address}, {address.city}, {address.country}"
-
+# Address Serializers
+class BaseAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = [
-            "id",
-            "address",
-        ]
+        fields = ["id", "address", "city", "country"]
 
 
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        fields = [
-            "id",
-            "address",
-            "city",
-            "country",
+class AddressSerializer(BaseAddressSerializer):
+    class Meta(BaseAddressSerializer.Meta):
+        fields = BaseAddressSerializer.Meta.fields + [
             "postal_code",
             "latitude",
             "longitude",
         ]
 
 
-class CreateSimpleAddressSerializer(serializers.ModelSerializer):
+class SimpleAddressSerializer(serializers.ModelSerializer):
+    address = serializers.SerializerMethodField()
+
     class Meta:
         model = Address
-        fields = [
-            "id",
-            "address",
-            "city",
-            "country",
-        ]
+        fields = ["id", "address"]
+
+    def get_address(self, obj):
+        return f"{obj.address}, {obj.city}, {obj.country}"
+
+
+# Client Serializers
 
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -73,11 +65,12 @@ class ClientSerializer(serializers.ModelSerializer):
 
 
 class CreateClientSerializer(serializers.ModelSerializer):
-    address = CreateSimpleAddressSerializer(required=False, allow_null=True)
+    address = BaseAddressSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Client
         fields = [
+            "user",  # a user shouldn't be missing with this
             "national_id",
             "birth_date",
             "profession",
@@ -88,44 +81,26 @@ class CreateClientSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         address_data = validated_data.pop("address", None)
-
-        address = None
-        if address_data:
-            address = Address.objects.create(**address_data)
-
+        address = Address.objects.create(**address_data) if address_data else None
         return Client.objects.create(address=address, **validated_data)
 
-    # def validate(self, attrs):
-    #     user = self.context["request"].user
 
-    #     # Check if a client already exists for this user
-    #     if Client.objects.filter(user=user).exists():
-    #         raise serializers.ValidationError(
-    #             {"user": _("A client profile already exists for your account.")}
-    #         )
-    #     return attrs
+# Service Serializers
 
 
 class SimpleServiceSerializer(serializers.ModelSerializer):
     price = serializers.CharField(source="get_price_text", read_only=True)
 
-    def get_price(self, service: Service):
-        return service.get_price_text()
-
     class Meta:
         model = Service
-        fields = [
-            "id",
-            "name",
-            "description",
-            "price",
-            "image",
-        ]
+        fields = ["id", "name", "description", "price", "image"]
 
 
 class ServiceSerializer(serializers.ModelSerializer):
     currency = serializers.CharField(
-        default="EGP", validators=[ExactLengthValidator(3)], label=_("Currency")
+        default="EGP",
+        validators=[ExactLengthValidator(3)],
+        label=_("Currency"),
     )
 
     class Meta:
@@ -144,16 +119,7 @@ class ServiceSerializer(serializers.ModelSerializer):
         ]
 
 
-class SimpleStaffMemberSerializer(serializers.ModelSerializer):
-    fullname = serializers.SerializerMethodField(method_name="get_fullname")
-    email = serializers.EmailField(source="user.email", read_only=True)
-
-    def get_fullname(self, staff_member: StaffMember):
-        return f"{staff_member.user.first_name} {staff_member.user.last_name}".strip()
-
-    class Meta:
-        model = StaffMember
-        fields = ["id", "fullname", "email"]
+# Working Hours Serializers
 
 
 class WorkingHoursSerializer(serializers.ModelSerializer):
@@ -162,11 +128,34 @@ class WorkingHoursSerializer(serializers.ModelSerializer):
         fields = ["id", "day_of_week", "start_time", "end_time"]
 
 
+# Day off Serializers
+
+
+class DayOffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DayOff
+        fields = ["id", "start_date", "end_date", "description"]
+
+
+# Staff Member Serializers
+
+
+class SimpleStaffMemberSerializer(serializers.ModelSerializer):
+    fullname = serializers.CharField(source="user.get_full_name", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        model = StaffMember
+        fields = ["id", "name", "email"]
+
+
 class StaffMemberSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     services_offered = serializers.StringRelatedField(many=True)
     working_hours = WorkingHoursSerializer(
-        read_only=True, many=True, source="workinghours_set"
+        many=True, read_only=True, source="workinghours_set"
     )
+    days_off = DayOffSerializer(many=True, read_only=True, source="dayoff_set")
 
     class Meta:
         model = StaffMember
@@ -181,6 +170,7 @@ class StaffMemberSerializer(serializers.ModelSerializer):
             "work_on_saturday",
             "work_on_sunday",
             "working_hours",
+            "days_off",
         ]
 
 
@@ -198,6 +188,19 @@ class CreateStaffMemberSerializer(serializers.ModelSerializer):
             "work_on_saturday",
             "work_on_sunday",
         ]
+
+    def create(self, validated_data):
+        with transaction.atomic():
+            staff_member = super().create(validated_data)
+            user = staff_member.user
+            staff_group, __ = Group.objects.get_or_create(name=STAFF_GROUP)
+            user.groups.add(staff_group)
+            user.save()
+            return staff_member
+
+
+# AppointmentRequest Serializers
+# NOTE: I've no idea what AppointmentRequest.id_request is for!
 
 
 class AppointmentRequestSerializer(serializers.ModelSerializer):
@@ -231,9 +234,11 @@ class CreateAppointmentRequestSerializer(serializers.ModelSerializer):
             "staff_member",
             "payment_type",
             "reschedule_attempts",
-            # NOTE: sill don't know what that is for?
             "id_request",
         ]
+
+
+# Appointment Serializers
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -244,7 +249,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
         label=_("Address"),
         help_text=_("Does not have to be specific, just the city and the country"),
     )
-
     # chagned initial to True
     want_reminder = serializers.BooleanField(
         initial=True,
@@ -266,10 +270,12 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "additional_info",
             "paid",
             "amount_to_pay",
-            # NOTE: I don't know what id_request is used for.
             "id_request",  # An ID for the appointment.
         ]
         read_only_fields = ["client", "id_request"]
+
+
+# Config Serializers
 
 
 class ConfigSerializer(serializers.ModelSerializer):
@@ -290,32 +296,7 @@ class ConfigSerializer(serializers.ModelSerializer):
         ]
 
 
-class PaymentInfoSerializer(serializers.ModelSerializer):
-    appointment = AppointmentSerializer(read_only=True)
-
-    class Meta:
-        model = PaymentInfo
-        fields = ["id", "appointment"]
-
-
-class CreatePaymentInfoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PaymentInfo
-        fields = ["id", "appointment"]
-
-
-class DayOffSerializer(serializers.ModelSerializer):
-    staff_member = SimpleStaffMemberSerializer(read_only=True)
-
-    class Meta:
-        model = DayOff
-        fields = ["id", "staff_member", "start_date", "end_date", "description"]
-
-
-class CreateDayOffSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DayOff
-        fields = ["staff_member", "start_date", "end_date", "description"]
+# Organization Serializers
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -333,6 +314,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "website",
             "is_active",
         ]
+
+
+# Branch Serializers
 
 
 class BranchSerializer(serializers.ModelSerializer):
@@ -384,6 +368,9 @@ class CreateBranchSerializer(serializers.ModelSerializer):
             return super().update(instance, validated_data)
 
 
+# Service Counter Serializer
+
+
 class ServiceCounterSerializer(serializers.ModelSerializer):
     branch = BranchSerializer()
     service = SimpleServiceSerializer()
@@ -395,28 +382,29 @@ class ServiceCounterSerializer(serializers.ModelSerializer):
 
 
 class CreateServiceCounterSerializer(serializers.ModelSerializer):
-    is_operational = serializers.BooleanField(
-        read_only=True, initial=True, label=_("Is Operational")
-    )
+    is_operational = serializers.BooleanField(read_only=True, default=True)
 
     class Meta:
         model = ServiceCounter
         fields = ["id", "name", "branch", "service", "staff_member", "is_operational"]
 
-    def validate(self, data):
-        # create or update records
-        staff_member = data.get(
-            "staff_member", getattr(self.instance, "staff_member", None)
-        )
-        service = data.get("service", getattr(self.instance, "service", None))
-        if staff_member and service:
-            if service not in staff_member.services_offered.all():
-                # validate if staff_member can offer the assigned service or not
-                raise serializers.ValidationError(
-                    {
-                        "staff_member": _(
-                            "This staff member is not authorized for this service."
-                        )
-                    }
-                )
-        return data
+    def validate(self, attrs):
+        staff = attrs.get("staff_member", getattr(self.instance, "staff_member", None))
+        service = attrs.get("service", getattr(self.instance, "service", None))
+
+        if staff and service and service not in staff.services_offered.all():
+            raise serializers.ValidationError(
+                {"staff_member": _("Staff member cannot offer this service.")}
+            )
+        return attrs
+
+
+# Mixins
+class ReadWriteSerializerMixin:
+    read_serializer = None
+    write_serializer = None
+
+    def get_serializer_class(self):
+        if self.action in ("create", "update", "partial_update"):
+            return self.write_serializer
+        return self.read_serializer

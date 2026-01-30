@@ -1,86 +1,87 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission, SAFE_METHODS
+from .models import STAFF_GROUP
 
 
-class IsOwner(permissions.BasePermission):
-    """Is Object Owner"""
+def is_staff_member(user):
+    """Returns whether the user belongs to the Service Staff Member Group"""
+    return user.groups.filter(name=STAFF_GROUP).exists()
+
+
+class IsOwner(BasePermission):
+    """Allow access only to the object owner."""
 
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user
 
 
-class IsOwnerOrAdmin(permissions.BasePermission):
-    """Is Object Owner"""
+class IsOwnerOrAdmin(BasePermission):
+    """Owner has access; admin has full access."""
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_staff or obj.user == request.user
 
 
-class IsAdminOrReadOnly(permissions.BasePermission):
+class IsAdminOrReadOnly(BasePermission):
+    """Admins can write; everyone can read."""
+
+    def has_permission(self, request, view):
+        return request.method in SAFE_METHODS or request.user.is_staff
+
+
+class AppointmentPermissions(BasePermission):
     """
-    Admin Only Have All access otherwise you can
-    use SAFE_METHODS 'GET,OPTION,HEAD'
+    Admin: full access
+    Staff: access assigned appointments
+    Client: access own appointments
+    """
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        if user.is_staff:
+            return True
+
+        if is_staff_member(user):
+            return obj.appointment_request.staff_member.user == user
+
+        return obj.client == user
+
+
+class AppointmentRequestPermissions(BasePermission):
+    """
+    Admin: full access
+    Staff: access assigned requests
+    Client: access own requests
+    """
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        if user.is_staff:
+            return True
+
+        if is_staff_member(user):
+            return obj.staff_member.user == user
+
+        return obj.client == user
+
+
+class IsStaffMemberOrAdminOrReadOnly(BasePermission):
+    """
+    Read: everyone authenticated
+    Write:
+      - Admin: all
+      - Staff: own only
     """
 
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
+        if request.method in SAFE_METHODS:
             return True
-        return bool(request.user and request.user.is_staff)
 
-
-class AppointmentPermissions(permissions.BasePermission):
-    """
-    Used in Appointment and AppointmentRequest Model Views
-    admin-users: full control
-    staff: full control over assigned appointments only.
-    authenticated: full control over their own appointments only.
-    """
+        return request.user.is_staff or is_staff_member(request.user)
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_staff:
-            return True
-
-        if request.user.groups.filter(name="Service Staff Member").exists():
-            return obj.appointment_request.staff_member.user == request.user
-
-        return obj.client == request.user
-
-
-class AppointmentRequestPermissions(permissions.BasePermission):
-    """
-    Used in Appointment and AppointmentRequest Model Views
-    admin-users: full control
-    staff: full control over assigned appointments only.
-    authenticated: full control over their own appointments only.
-    """
-
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_staff:
-            return True
-
-        if request.user.groups.filter(name="Service Staff Member").exists():
-            return obj.staff_member.user == request.user
-
-        return obj.client == request.user
-
-
-class IsStaffMemberOrAdminOrReadOnly(permissions.BasePermission):
-    """
-    Used in DaysOff Model View
-    admin: full control.
-    staff: full control over OWN, view others.
-    authenticated: view only.
-    """
-
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return bool(
-            request.user.is_staff
-            or request.user.groups.filter(name="Service Staff Member").exists()
-        )
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
+        if request.method in SAFE_METHODS:
             return True
 
         if request.user.is_staff:

@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from appointment.models import (
     Appointment,
@@ -10,6 +10,8 @@ from appointment.models import (
     WorkingHours,
     Service,
 )
+
+from api.pagenation import DefaultPagination
 from .permissions import (
     AppointmentRequestPermissions,
     IsAdminOrReadOnly,
@@ -26,12 +28,10 @@ from .serializers import (
     ConfigSerializer,
     CreateBranchSerializer,
     CreateClientSerializer,
-    CreateDayOffSerializer,
-    CreatePaymentInfoSerializer,
     CreateServiceCounterSerializer,
     CreateStaffMemberSerializer,
     DayOffSerializer,
-    PaymentInfoSerializer,
+    ReadWriteSerializerMixin,
     StaffMemberSerializer,
     WorkingHoursSerializer,
     ServiceSerializer,
@@ -43,52 +43,23 @@ from .serializers import (
 # Create your views here.
 
 
-class ClientViewSet(viewsets.ModelViewSet):
+class ClientViewSet(ReadWriteSerializerMixin, ModelViewSet):
+    read_serializer = ClientSerializer
+    write_serializer = CreateClientSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def get_serializer_class(self):
-        if self.request.method in ["POST", "PATCH", "PUT"]:
-            return CreateClientSerializer
-        return ClientSerializer
 
     def get_queryset(self):
         user = self.request.user
         queryset = Client.objects.select_related("user")
-        if user.is_staff:
-            return queryset.all()
-
-        return queryset.filter(user=user)
-
-
-class AppointmentViewSet(viewsets.ModelViewSet):
-    serializer_class = AppointmentSerializer
-    permission_classes = [IsAuthenticated, AppointmentPermissions]
+        return queryset if user.is_staff else queryset.filter(user=user)
 
     def perform_create(self, serializer):
-        serializer.save(client=self.request.user)
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Appointment.objects.select_related("appointment_request")
-        if user.is_staff:
-            return queryset.all()
-
-        if user.groups.filter(name="Service Staff Member").exists():
-            return queryset.filter(appointment_request__staff_member__user=user)
-
-        return queryset.filter(client=user)
+        serializer.save(user=self.request.user)
 
 
-class AppointmentRequestViewSet(viewsets.ModelViewSet):
+class AppointmentRequestViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, AppointmentRequestPermissions]
-
-    def get_serializer_class(self):
-        if self.request.method == "POST":
-            return CreateAppointmentRequestSerializer
-        return AppointmentRequestSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -104,74 +75,108 @@ class AppointmentRequestViewSet(viewsets.ModelViewSet):
 
         return queryset.filter(appointment__client=user)
 
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateAppointmentRequestSerializer
+        return AppointmentRequestSerializer
 
-class ConfigViewSet(viewsets.ModelViewSet):
+
+class AppointmentViewSet(ModelViewSet):
+    serializer_class = AppointmentSerializer
+    permission_classes = [IsAuthenticated, AppointmentPermissions]
+    pagination_class = DefaultPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Appointment.objects.select_related("appointment_request")
+        if user.is_staff:
+            return queryset
+
+        if user.groups.filter(name="Service Staff Member").exists():
+            return queryset.filter(appointment_request__staff_member__user=user)
+
+        return queryset.filter(client=user)
+
+    def perform_create(self, serializer):
+        serializer.save(client=self.request.user)
+
+
+class ConfigViewSet(ModelViewSet):
     queryset = Config.objects.all()
     serializer_class = ConfigSerializer
     permission_classes = [IsAdminUser]
 
 
-class DayOffViewSet(viewsets.ModelViewSet):
+class DayOffViewSet(ModelViewSet):
+    serializer_class = DayOffSerializer
     permission_classes = [IsAuthenticated, IsStaffMemberOrAdminOrReadOnly]
 
-    def get_serializer_class(self):
-        if self.request.method in ["POST", "PUT", "PATCH"]:
-            return CreateDayOffSerializer
-        return DayOffSerializer
+    def get_queryset(self):
+        staff_member_pk = self.kwargs.get("staff_member_pk")
+        queryset = DayOff.objects.select_related("staff_member", "staff_member__user")
+        if staff_member_pk:
+            return queryset.filter(staff_member_id=staff_member_pk)
+        return queryset
+
+    def perform_create(self, serializer):
+        staff_member_pk = self.kwargs.get("staff_member_pk")
+        if staff_member_pk:
+            serializer.save(staff_member_id=staff_member_pk)
+        else:
+            serializer.save()
+
+
+class WorkingHoursViewSet(ModelViewSet):
+    queryset = WorkingHours.objects.all()
+    serializer_class = WorkingHoursSerializer
+    permission_classes = [IsAuthenticated, IsStaffMemberOrAdminOrReadOnly]
 
     def get_queryset(self):
-        return DayOff.objects.select_related("staff_member", "staff_member__user")
+        queryset = WorkingHours.objects.all()
+        staff_member_pk = self.request.query_params.get("staff_member_pk")
+        if staff_member_pk:
+            queryset.filter(staff_member_pk=staff_member_pk)
+        return queryset
+
+    def perform_create(self, serializer):
+        staff_member_pk = self.kwargs.get("staff_member_pk")
+        if staff_member_pk:
+            serializer.save(staff_member_id=staff_member_pk)
+        else:
+            serializer.save()
 
 
-class PaymentInfoViewSet(viewsets.ModelViewSet):
-    queryset = PaymentInfo.objects.all()
-    permission_classes = [IsAuthenticated]
-
-    def get_serializer_class(self):
-        if self.request.method in ["POST", "PUT", "PATCH"]:
-            return CreatePaymentInfoSerializer
-        return PaymentInfoSerializer
-
-
-class StaffMemberViewSet(viewsets.ModelViewSet):
+class StaffMemberViewSet(ReadWriteSerializerMixin, ModelViewSet):
+    read_serializer = StaffMemberSerializer
+    write_serializer = CreateStaffMemberSerializer
     queryset = (
         StaffMember.objects.select_related("user")
         .prefetch_related("services_offered")
         .all()
     )
     permission_classes = [IsAuthenticated, IsStaffMemberOrAdminOrReadOnly]
-
-    def get_serializer_class(self):
-        if self.request.method in ["POST", "PUT", "PATCH"]:
-            return CreateStaffMemberSerializer
-        return StaffMemberSerializer
+    pagination_class = DefaultPagination
 
 
-class WorkingHoursViewSet(viewsets.ModelViewSet):
-    queryset = WorkingHours.objects.all()
-    serializer_class = WorkingHoursSerializer
-    permission_classes = [IsAuthenticated, IsStaffMemberOrAdminOrReadOnly]
-
-
-class ServiceViewSet(viewsets.ModelViewSet):
+class ServiceViewSet(ModelViewSet):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
     permission_classes = [IsAdminOrReadOnly]
+    pagination_class = DefaultPagination
 
 
-class OrganizationViewSet(viewsets.ModelViewSet):
+class OrganizationViewSet(ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     permission_classes = [IsAdminOrReadOnly]
+    pagination_class = DefaultPagination
 
 
-class BranchViewSet(viewsets.ModelViewSet):
+class BranchViewSet(ReadWriteSerializerMixin, ModelViewSet):
+    read_serializer = BranchSerializer
+    write_serializer = CreateBranchSerializer
     permission_classes = [IsAdminOrReadOnly]
-
-    def get_serializer_class(self):
-        if self.request.method in ["POST", "PUT", "PATCH"]:
-            return CreateBranchSerializer
-        return BranchSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         organization_pk = self.kwargs.get("organization_pk")
@@ -181,19 +186,15 @@ class BranchViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class ServiceCounterViewSet(viewsets.ModelViewSet):
+class ServiceCounterViewSet(ReadWriteSerializerMixin, ModelViewSet):
+    read_serializer = ServiceCounterSerializer
+    write_serializer = CreateServiceCounterSerializer
     permission_classes = [IsAdminOrReadOnly]
-
-    def get_serializer_class(self):
-        if self.request.method in ["POST", "PUT", "PATCH"]:
-            return CreateServiceCounterSerializer
-        return ServiceCounterSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         branch_pk = self.kwargs.get("branch_pk")
         queryset = ServiceCounter.objects.select_related(
             "staff_member", "service", "branch"
-        ).all()
-        if branch_pk:
-            return queryset.filter(branch_id=branch_pk)
-        return queryset
+        )
+        return queryset.filter(branch_id=branch_pk) if branch_pk else queryset

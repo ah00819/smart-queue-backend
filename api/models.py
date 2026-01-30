@@ -8,6 +8,13 @@ from .validators import ExactLengthValidator, validate_birth_date, validate_file
 
 # Create your models here.
 
+# NOTE: django-appointments has
+# 1.`PaymentInfo` model that only has payment related methods extracted
+# from Appointment model and no substantial information
+
+
+STAFF_GROUP = "Service Staff Member"
+
 
 class Address(models.Model):
     address = models.CharField(max_length=255, verbose_name=_("Street Address"))

@@ -10,8 +10,6 @@ router.register(
     basename="appointment-requests",
 )
 router.register("configs", views.ConfigViewSet, basename="configs")
-router.register("days-off", views.DayOffViewSet, basename="days-off")
-router.register("payment-infos", views.PaymentInfoViewSet, basename="payment-infos")
 router.register("staff-members", views.StaffMemberViewSet, basename="staff-members")
 router.register("services", views.ServiceViewSet, basename="services")
 router.register("organizations", views.OrganizationViewSet, basename="organizations")
@@ -37,6 +35,9 @@ staff_members_router = routers.NestedDefaultRouter(
 )
 staff_members_router.register(
     "working-hours", views.WorkingHoursViewSet, basename="staff-member-working-hours"
+)
+staff_members_router.register(
+    "days-off", views.DayOffViewSet, basename="staff-member-days-off"
 )
 # =================================================
 

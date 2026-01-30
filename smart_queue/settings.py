@@ -153,7 +153,7 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("JWT",),
 }
 if DEBUG:
-    SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(days=1)
+    SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(days=400)
 
 AUTH_USER_MODEL = "core.User"
 
