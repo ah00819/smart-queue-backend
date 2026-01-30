@@ -30,6 +30,7 @@ urlpatterns = [
     path("auth/", include("djoser.urls.jwt")),
     path("appointment/", include("appointment.urls")),
     path("api/", include("api.urls")),
+    path("app/", include("core.urls")),
 ] + debug_toolbar_urls()
 
 if settings.DEBUG:

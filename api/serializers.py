@@ -1,7 +1,6 @@
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from django.db import transaction
-from .validators import ExactLengthValidator
 from appointment.models import (
     Appointment,
     AppointmentRequest,
@@ -12,11 +11,99 @@ from appointment.models import (
     DayOff,
     WorkingHours,
 )
-from .models import Organization, Address, Branch, ServiceCounter
-from django.contrib.auth import get_user_model
+from .validators import ExactLengthValidator
+from .models import Client, Organization, Address, Branch, ServiceCounter
 
 
-User = get_user_model()
+class SimpleAddressSerializer(serializers.ModelSerializer):
+    address = serializers.SerializerMethodField()
+
+    def get_address(self, address: Address):
+        return f"{address.address}, {address.city}, {address.country}"
+
+    class Meta:
+        model = Address
+        fields = [
+            "id",
+            "address",
+        ]
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = [
+            "id",
+            "address",
+            "city",
+            "country",
+            "postal_code",
+            "latitude",
+            "longitude",
+        ]
+
+
+class CreateSimpleAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = [
+            "id",
+            "address",
+            "city",
+            "country",
+        ]
+
+
+class ClientSerializer(serializers.ModelSerializer):
+    address = SimpleAddressSerializer()
+
+    class Meta:
+        model = Client
+        fields = [
+            "id",
+            "user",
+            "address",
+            "national_id",
+            "birth_date",
+            "profession",
+            "gender",
+            "address",
+            "image",
+        ]
+
+
+class CreateClientSerializer(serializers.ModelSerializer):
+    address = CreateSimpleAddressSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Client
+        fields = [
+            "national_id",
+            "birth_date",
+            "profession",
+            "gender",
+            "address",
+            "image",
+        ]
+
+    def create(self, validated_data):
+        address_data = validated_data.pop("address", None)
+
+        address = None
+        if address_data:
+            address = Address.objects.create(**address_data)
+
+        return Client.objects.create(address=address, **validated_data)
+
+    # def validate(self, attrs):
+    #     user = self.context["request"].user
+
+    #     # Check if a client already exists for this user
+    #     if Client.objects.filter(user=user).exists():
+    #         raise serializers.ValidationError(
+    #             {"user": _("A client profile already exists for your account.")}
+    #         )
+    #     return attrs
 
 
 class SimpleServiceSerializer(serializers.ModelSerializer):
@@ -69,14 +156,6 @@ class SimpleStaffMemberSerializer(serializers.ModelSerializer):
         fields = ["id", "fullname", "email"]
 
 
-class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(source="get_full_name", read_only=True)
-
-    class Meta:
-        model = User
-        fields = ["id", "username", "full_name", "email"]
-
-
 class WorkingHoursSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkingHours
@@ -84,7 +163,6 @@ class WorkingHoursSerializer(serializers.ModelSerializer):
 
 
 class StaffMemberSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
     services_offered = serializers.StringRelatedField(many=True)
     working_hours = WorkingHoursSerializer(
         read_only=True, many=True, source="workinghours_set"
@@ -254,34 +332,6 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "email",
             "website",
             "is_active",
-        ]
-
-
-class SimpleAddressSerializer(serializers.ModelSerializer):
-    address = serializers.SerializerMethodField()
-
-    def get_address(self, address: Address):
-        return f"{address.address}, {address.city}, {address.country}"
-
-    class Meta:
-        model = Address
-        fields = [
-            "id",
-            "address",
-        ]
-
-
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        fields = [
-            "id",
-            "address",
-            "city",
-            "country",
-            "postal_code",
-            "latitude",
-            "longitude",
         ]
 
 

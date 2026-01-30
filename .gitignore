@@ -1,6 +1,6 @@
 services
 .vscode
-media/api/images/*
+media
 Routes.txt
 
 # Byte-compiled / optimized / DLL files

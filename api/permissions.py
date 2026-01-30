@@ -1,6 +1,20 @@
 from rest_framework import permissions
 
 
+class IsOwner(permissions.BasePermission):
+    """Is Object Owner"""
+
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user
+
+
+class IsOwnerOrAdmin(permissions.BasePermission):
+    """Is Object Owner"""
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_staff or obj.user == request.user
+
+
 class IsAdminOrReadOnly(permissions.BasePermission):
     """
     Admin Only Have All access otherwise you can

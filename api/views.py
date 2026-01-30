@@ -14,15 +14,18 @@ from .permissions import (
     AppointmentRequestPermissions,
     IsAdminOrReadOnly,
     AppointmentPermissions,
+    IsOwnerOrAdmin,
     IsStaffMemberOrAdminOrReadOnly,
 )
-from .models import Organization, Branch, ServiceCounter
+from .models import Client, Organization, Branch, ServiceCounter
 from .serializers import (
     AppointmentRequestSerializer,
+    ClientSerializer,
     CreateAppointmentRequestSerializer,
     AppointmentSerializer,
     ConfigSerializer,
     CreateBranchSerializer,
+    CreateClientSerializer,
     CreateDayOffSerializer,
     CreatePaymentInfoSerializer,
     CreateServiceCounterSerializer,
@@ -38,6 +41,26 @@ from .serializers import (
 )
 
 # Create your views here.
+
+
+class ClientViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.request.method in ["POST", "PATCH", "PUT"]:
+            return CreateClientSerializer
+        return ClientSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Client.objects.select_related("user")
+        if user.is_staff:
+            return queryset.all()
+
+        return queryset.filter(user=user)
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):

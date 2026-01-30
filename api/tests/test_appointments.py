@@ -34,7 +34,7 @@ class TestCreateAppointment:
         appointment = {
             "client": 1,
             "appointment_request": appointment_request.id,
-            "phone": "+2001152123722",
+            "phone": "+2001192123632",
             "address": "1234, Main, st, city",
             "want_reminder": True,
             "paid": False,
@@ -69,7 +69,7 @@ class TestCreateAppointment:
         appointment = {
             "client": user,
             "appointment_request": appointment_request.id,
-            "phone": "+2001152123722",
+            "phone": "+2001192123632",
             "address": "1234, Main, st, city",
             "want_reminder": True,
             "paid": False,
