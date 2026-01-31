@@ -5,7 +5,6 @@ from appointment.models import (
     AppointmentRequest,
     Config,
     DayOff,
-    PaymentInfo,
     StaffMember,
     WorkingHours,
     Service,

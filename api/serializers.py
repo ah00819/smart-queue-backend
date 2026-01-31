@@ -8,7 +8,6 @@ from appointment.models import (
     Service,
     StaffMember,
     Config,
-    PaymentInfo,
     DayOff,
     WorkingHours,
 )

@@ -196,13 +196,16 @@ class ServiceCounter(models.Model):
     def clean(self):
         super().clean()
 
-        if self.staff_member and self.service:
-            if not self.staff_member.services_offered.filter(
+        if (
+            self.staff_member
+            and self.service
+            and not self.staff_member.services_offered.filter(
                 id=self.service_id
-            ).exists():
-                raise ValidationError(
-                    "The assigned staff member does not offer this service."
-                )
+            ).exists()
+        ):
+            raise ValidationError(
+                "The assigned staff member does not offer this service."
+            )
 
     def save(self, *args, **kwargs):
         self.full_clean()
