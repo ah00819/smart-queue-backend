@@ -140,7 +140,7 @@ class DayOffSerializer(serializers.ModelSerializer):
 
 
 class SimpleStaffMemberSerializer(serializers.ModelSerializer):
-    fullname = serializers.CharField(source="user.get_full_name", read_only=True)
+    name = serializers.CharField(source="user.get_full_name", read_only=True)
     email = serializers.EmailField(source="user.email", read_only=True)
 
     class Meta:

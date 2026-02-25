@@ -14,6 +14,7 @@ djangorestframework-simplejwt = "*"
 djoser = "*"
 django-appointment = "*"
 django-phonenumber-field = {extras = ["phonenumbers"], version = "*"}
+drf-spectacular = "*"
 
 [dev-packages]
 pylint-django = "*"

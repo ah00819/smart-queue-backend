@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "api",  # custom_appointment
     "core",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
 
 MIDDLEWARE = [
@@ -147,6 +149,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -158,3 +161,15 @@ if DEBUG:
 AUTH_USER_MODEL = "core.User"
 
 APPOINTMENT_WEBSITE_NAME = "Smart Queue"
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Smart Queue API",
+    "DESCRIPTION": "Smart Queue project description...",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # Sidecar
+    "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
+    # OTHER SETTINGS
+}
