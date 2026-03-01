@@ -1,13 +1,13 @@
 from django.db import transaction
 from rest_framework import serializers
-from api.serializers import CreateClientSerializer
+from api.serializers import CreateProfileClientSerializer
 from .models import User
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     """Grouping User data and Client Appointment-Api Specific Data"""
 
-    client = CreateClientSerializer()
+    client = CreateProfileClientSerializer()
     password = serializers.CharField(write_only=True, style={"input_type": "password"})
 
     class Meta:
@@ -27,7 +27,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         with transaction.atomic():
             user = User.objects.create_user(**validated_data)
-            client_serializer = CreateClientSerializer(
+            client_serializer = CreateProfileClientSerializer(
                 data=client_data,
                 context=self.context,
             )

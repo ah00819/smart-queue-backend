@@ -84,6 +84,27 @@ class CreateClientSerializer(serializers.ModelSerializer):
         return Client.objects.create(address=address, **validated_data)
 
 
+class CreateProfileClientSerializer(serializers.ModelSerializer):
+    address = BaseAddressSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Client
+        fields = [
+            "national_id",
+            "birth_date",
+            "profession",
+            "gender",
+            "address",
+            "image",
+        ]
+
+    def create(self, validated_data):
+        address_data = validated_data.pop("address", None)
+        user = validated_data.pop("user")
+        address = Address.objects.create(**address_data) if address_data else None
+        return Client.objects.create(user=user, address=address, **validated_data)
+
+
 # Service Serializers
 
 
