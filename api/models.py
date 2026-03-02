@@ -83,6 +83,12 @@ class Client(models.Model):
         blank=True,
         validators=[validate_birth_date],
     )
+    phone = PhoneNumberField(
+        null=True,
+        blank=True,
+        verbose_name=_("Phone Number"),
+        help_text=_("Contact phone number"),
+    )
     profession = models.CharField(
         max_length=100, verbose_name=_("Profession"), null=True, blank=True
     )

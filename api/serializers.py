@@ -92,6 +92,7 @@ class CreateProfileClientSerializer(serializers.ModelSerializer):
         fields = [
             "national_id",
             "birth_date",
+            "phone",
             "profession",
             "gender",
             "address",
