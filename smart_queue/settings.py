@@ -158,6 +158,11 @@ SIMPLE_JWT = {
 if DEBUG:
     SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(days=400)
 
+AUTHENTICATION_BACKENDS = [
+    "core.backends.NationalIDBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 AUTH_USER_MODEL = "core.User"
 
 APPOINTMENT_WEBSITE_NAME = "Smart Queue"

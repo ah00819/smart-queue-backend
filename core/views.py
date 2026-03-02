@@ -2,8 +2,9 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
-from .serializers import ProfileSerializer
+from .serializers import NationalIDTokenSerializer, ProfileSerializer
 
 # Create your views here.
 
@@ -60,3 +61,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         elif request.method == "DELETE":
             user.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class NationalIDTokenView(TokenObtainPairView):
+    serializer_class = NationalIDTokenSerializer

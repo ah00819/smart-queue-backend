@@ -1,6 +1,9 @@
 from django.db import transaction
-from rest_framework import serializers
+from django.contrib.auth import authenticate
+from rest_framework import serializers, exceptions
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from api.serializers import CreateProfileClientSerializer
+from api.models import Client
 from .models import User
 
 
@@ -54,3 +57,30 @@ class ProfileSerializer(serializers.ModelSerializer):
                     client_instance.save()
 
         return instance
+
+
+class NationalIDTokenSerializer(TokenObtainPairSerializer):
+    username_field = "national_id"
+
+    def validate(self, attrs):
+        national_id = attrs.get("national_id")
+        password = attrs.get("password")
+
+        try:
+            client = Client.objects.select_related("user").get(national_id=national_id)
+        except Client.DoesNotExist:
+            raise exceptions.AuthenticationFailed(
+                "No client found with this National ID."
+            )
+        user = authenticate(
+            request=self.context.get("request"),
+            national_id=national_id,
+            password=password,
+        )
+        if user is None:
+            raise exceptions.AuthenticationFailed("Invalid password.")
+        if not user.is_active:
+            raise exceptions.AuthenticationFailed("User account is disabled.")
+
+        attrs["username"] = client.user.username
+        return super().validate(attrs)
