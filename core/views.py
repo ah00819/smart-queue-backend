@@ -4,7 +4,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
-from .serializers import NationalIDTokenSerializer, ProfileSerializer
+from .serializers import (
+    NationalIDTokenSerializer,
+    CreateProfileSerializer,
+    SimpleProfileSerializer,
+    UpdateProfileSerializer,
+)
 
 # Create your views here.
 
@@ -17,20 +22,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     Authenticated Users: return a serializer that allows all but POST
     """
 
-    serializer_class = ProfileSerializer
-
-    def get_permissions(self):
-        if self.action == "create":
-            return [AllowAny()]
-        return [IsAuthenticated()]
-
-    def get_queryset(self):
-        user = self.request.user
-        if user.is_authenticated:
-            return User.objects.filter(id=user.id)
-        return User.objects.none()
-
-    def get_serializer_class(self):
+    def initial(self, request, *args, **kwargs):
         user = self.request.user
         if user.is_anonymous:
             self.http_method_names = ["post", "head", "options"]
@@ -43,7 +35,29 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 "head",
                 "options",
             ]
-        return super().get_serializer_class()
+            # dirty fix, 'options' is currenty useless
+            if self.action == "me":
+                self.http_method_names.remove("options")
+
+        return super().initial(request, *args, **kwargs)
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        return User.objects.filter(id=self.request.user.id)
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateProfileSerializer
+        if self.action in ["update", "partial_update", "me"]:
+            # GET on /profiles/me/
+            if self.request.method == "GET":
+                return SimpleProfileSerializer
+            return UpdateProfileSerializer
+        return SimpleProfileSerializer
 
     @action(detail=False, methods=["get", "put", "patch", "delete"])
     def me(self, request):
@@ -53,7 +67,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
         elif request.method in ["PUT", "PATCH"]:
-            serializer = self.get_serializer(user, data=request.data, partial=True)
+            serializer = self.get_serializer(
+                user, data=request.data, partial=(request.method == "PATCH")
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)

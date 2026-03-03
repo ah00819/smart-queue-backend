@@ -2,12 +2,51 @@ from django.db import transaction
 from django.contrib.auth import authenticate
 from rest_framework import serializers, exceptions
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from api.serializers import CreateProfileClientSerializer
-from api.models import Client
+from api.serializers import BaseAddressSerializer, ClientSerializer
+from api.models import Address, Client
 from .models import User
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class CreateProfileClientSerializer(serializers.ModelSerializer):
+    address = BaseAddressSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Client
+        fields = [
+            "national_id",
+            "birth_date",
+            "phone",
+            "profession",
+            "gender",
+            "address",
+            "image",
+        ]
+
+
+class UpdateProfileClientSerializer(serializers.ModelSerializer):
+    address = BaseAddressSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Client
+        fields = [
+            "birth_date",
+            "phone",
+            "profession",
+            "gender",
+            "address",
+            "image",
+        ]
+
+
+class SimpleProfileSerializer(serializers.ModelSerializer):
+    client = ClientSerializer()
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "client"]
+
+
+class CreateProfileSerializer(serializers.ModelSerializer):
     """Grouping User data and Client Appointment-Api Specific Data"""
 
     client = CreateProfileClientSerializer()
@@ -17,29 +56,29 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username", "email", "password", "client"]
 
-    def validate(self, attrs):
-        user = self.context["request"].user
-        if user.is_authenticated and self.context["request"].method == "POST":
-            raise serializers.ValidationError(
-                "Authenticated users cannot create a new profile."
-            )
-        return attrs
-
     def create(self, validated_data):
         client_data = validated_data.pop("client")
+        address_data = client_data.pop("address", None)
 
         with transaction.atomic():
             user = User.objects.create_user(**validated_data)
-            client_serializer = CreateProfileClientSerializer(
-                data=client_data,
-                context=self.context,
-            )
-            client_serializer.is_valid(raise_exception=True)
-            client_serializer.save(user=user)
+
+            address = Address.objects.create(**address_data) if address_data else None
+
+            Client.objects.create(user=user, address=address, **client_data)
         return user
 
+
+class UpdateProfileSerializer(serializers.ModelSerializer):
+    client = UpdateProfileClientSerializer(required=False)
+    password = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "password", "client"]
+
     def update(self, instance, validated_data):
-        client_data = validated_data.pop("client", {})
+        client_data = validated_data.pop("client", None)
         password = validated_data.pop("password", None)
 
         with transaction.atomic():
@@ -50,11 +89,21 @@ class ProfileSerializer(serializers.ModelSerializer):
                 instance.save()
 
             if client_data:
-                client_instance = getattr(instance, "client", None)
-                if client_instance:
-                    for attr, value in client_data.items():
-                        setattr(client_instance, attr, value)
-                    client_instance.save()
+                address_data = client_data.pop("address", None)
+                client_instance = instance.client
+
+                for attr, value in client_data.items():
+                    setattr(client_instance, attr, value)
+
+                if address_data:
+                    if client_instance.address:
+                        for attr, value in address_data.items():
+                            setattr(client_instance.address, attr, value)
+                        client_instance.address.save()
+                    else:
+                        client_instance.address = Address.objects.create(**address_data)
+
+                client_instance.save()
 
         return instance
 
