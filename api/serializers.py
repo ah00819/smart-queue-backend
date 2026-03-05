@@ -53,6 +53,7 @@ class ClientSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "user",
+            "phone",
             "address",
             "national_id",
             "birth_date",
