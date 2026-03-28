@@ -320,7 +320,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class BranchSerializer(serializers.ModelSerializer):
-    address = SimpleAddressSerializer()
+    address = AddressSerializer()
 
     class Meta:
         model = Branch
