@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from .models import STAFF_GROUP
+from appointment.models import Appointment, AppointmentRequest
 
 
 def is_staff_member(user):
@@ -35,7 +36,7 @@ class AppointmentPermissions(BasePermission):
     Client: access own appointments
     """
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj: Appointment):
         user = request.user
 
         if user.is_staff:
@@ -44,7 +45,7 @@ class AppointmentPermissions(BasePermission):
         if is_staff_member(user):
             return obj.appointment_request.staff_member.user == user
 
-        return obj.client == user
+        return obj.appointment_request.client == user
 
 
 class AppointmentRequestPermissions(BasePermission):
@@ -54,7 +55,7 @@ class AppointmentRequestPermissions(BasePermission):
     Client: access own requests
     """
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj: AppointmentRequest):
         user = request.user
 
         if user.is_staff:
@@ -63,7 +64,10 @@ class AppointmentRequestPermissions(BasePermission):
         if is_staff_member(user):
             return obj.staff_member.user == user
 
-        return obj.client == user
+        if hasattr(obj, "appointment"):
+            return obj.appointment.client == user
+
+        return True
 
 
 class IsStaffMemberOrAdminOrReadOnly(BasePermission):
