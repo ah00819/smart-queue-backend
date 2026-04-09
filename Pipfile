@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 django = "*"
 django-debug-toolbar = "*"
-mysqlclient = "*"
 djangorestframework = "*"
 drf-nested-routers = "*"
 django-filter = "*"
@@ -15,6 +14,8 @@ djoser = "*"
 django-appointment = "*"
 django-phonenumber-field = {extras = ["phonenumbers"], version = "*"}
 drf-spectacular = "*"
+drf-spectacular-sidecar = "*"
+mysqlclient = "*"
 
 [dev-packages]
 pylint-django = "*"

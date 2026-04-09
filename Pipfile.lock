@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1a4918545aa5c6b21e59fb63c7b7cd14834f877b2c071e462eb828139b244eba"
+            "sha256": "ed8f3acaf6c4378f3e9b11512ddb259ff4b1a4a8a97c066b583c9194f4c9ba04"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -330,12 +330,12 @@
         },
         "django": {
             "hashes": [
-                "sha256:7f2d292ad8b9ee35e405d965fbbad293758b858c34bbf7f3df551aeeac6f02d3",
-                "sha256:e7130df33ada9ab5e5e929bc19346a20fe383f5454acb2cc004508f242ee92c0"
+                "sha256:5788fce61da23788a8ce6f02583765ab060d396720924789f97fa42119d37f7a",
+                "sha256:a31589db5188d074c63f0945c3888fad104627dfcc236fb2b97f71f89da33bc4"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.10'",
-            "version": "==5.2.11"
+            "version": "==5.2.13"
         },
         "django-appointment": {
             "hashes": [
@@ -419,6 +419,15 @@
             "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==0.29.0"
+        },
+        "drf-spectacular-sidecar": {
+            "hashes": [
+                "sha256:2ccd2ec2faa7ecbca566f04b13cd2ce2f8558d697efcce25be013730063e11dd",
+                "sha256:c72cd012e82414c6cc66f442670b9173af81138f1321fb27e8799b49ecdfeaad"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.6'",
+            "version": "==2026.4.1"
         },
         "icalendar": {
             "hashes": [
@@ -879,11 +888,11 @@
         },
         "tzdata": {
             "hashes": [
-                "sha256:06a47e5700f3081aab02b2e513160914ff0694bce9947d6b76ebd6bf57cfc5d1",
-                "sha256:de39c2ca5dc7b0344f2eba86f49d614019d29f060fc4ebc8a417896a620b56a7"
+                "sha256:4b1d2be7ac37ceafd7327b961aa3a54e467efbdb563a23655fbfe0d39cfc42a9",
+                "sha256:67658a1903c75917309e753fdc349ac0efd8c27db7a0cb406a25be4840f87f98"
             ],
             "markers": "python_version >= '2'",
-            "version": "==2025.3"
+            "version": "==2026.1"
         },
         "uritemplate": {
             "hashes": [
