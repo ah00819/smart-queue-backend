@@ -1,6 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from .models import STAFF_GROUP
-from appointment.models import Appointment, AppointmentRequest
+from .models import STAFF_GROUP, Appointment
 
 
 def is_staff_member(user):
@@ -12,14 +11,16 @@ class IsOwner(BasePermission):
     """Allow access only to the object owner."""
 
     def has_object_permission(self, request, view, obj):
-        return obj.user == request.user
+        user_attr = getattr(obj, "user", None)
+        return user_attr == request.user
 
 
 class IsOwnerOrAdmin(BasePermission):
     """Owner has access; admin has full access."""
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_staff or obj.user == request.user
+        user_attr = getattr(obj, "user", None)
+        return request.user.is_staff or user_attr == request.user
 
 
 class IsAdminOrReadOnly(BasePermission):
@@ -32,7 +33,7 @@ class IsAdminOrReadOnly(BasePermission):
 class AppointmentPermissions(BasePermission):
     """
     Admin: full access
-    Staff: access assigned appointments
+    Staff: access appointments assigned to their counter
     Client: access own appointments
     """
 
@@ -43,31 +44,13 @@ class AppointmentPermissions(BasePermission):
             return True
 
         if is_staff_member(user):
-            return obj.appointment_request.staff_member.user == user
+            return (
+                obj.counter
+                and obj.counter.staff_member
+                and obj.counter.staff_member.user == user
+            )
 
-        return obj.appointment_request.client == user
-
-
-class AppointmentRequestPermissions(BasePermission):
-    """
-    Admin: full access
-    Staff: access assigned requests
-    Client: access own requests
-    """
-
-    def has_object_permission(self, request, view, obj: AppointmentRequest):
-        user = request.user
-
-        if user.is_staff:
-            return True
-
-        if is_staff_member(user):
-            return obj.staff_member.user == user
-
-        if hasattr(obj, "appointment"):
-            return obj.appointment.client == user
-
-        return True
+        return obj.client and obj.client.user == user
 
 
 class IsStaffMemberOrAdminOrReadOnly(BasePermission):
@@ -75,7 +58,7 @@ class IsStaffMemberOrAdminOrReadOnly(BasePermission):
     Read: everyone authenticated
     Write:
       - Admin: all
-      - Staff: own only
+      - Staff: own only (WorkDays, LeaveRequests)
     """
 
     def has_permission(self, request, view):
@@ -91,4 +74,4 @@ class IsStaffMemberOrAdminOrReadOnly(BasePermission):
         if request.user.is_staff:
             return True
 
-        return obj.staff_member.user == request.user
+        return hasattr(obj, "staff_member") and obj.staff_member.user == request.user

@@ -33,7 +33,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/", include("djoser.urls")),
     path("auth/", include("djoser.urls.jwt")),
-    path("appointment/", include("appointment.urls")),
+    # path("appointment/", include("appointment.urls")),
     path("api/", include("api.urls")),
     path("app/", include("core.urls")),
     # api docs
