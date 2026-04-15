@@ -108,13 +108,28 @@ class WorkDayViewSet(ModelViewSet):
 
     def get_queryset(self):
         staff_member_pk = self.kwargs.get("staff_member_pk")
+        branch_pk = self.kwargs.get("branch_pk")
+
         if staff_member_pk:
-            return WorkDay.objects.filter(staff_member_id=staff_member_pk)
+            return WorkDay.objects.filter(staff_members__id=staff_member_pk)
+        if branch_pk:
+            return WorkDay.objects.filter(branches__id=branch_pk)
+
         return WorkDay.objects.all()
 
     def perform_create(self, serializer):
         staff_member_pk = self.kwargs.get("staff_member_pk")
-        serializer.save(staff_member_id=staff_member_pk)
+        branch_pk = self.kwargs.get("branch_pk")
+
+        workday = serializer.save()
+
+        # Link it to the parent if the PK exists in the URL
+        if staff_member_pk:
+            staff = get_object_or_404(StaffMember, pk=staff_member_pk)
+            staff.workdays.add(workday)
+        elif branch_pk:
+            branch = get_object_or_404(Branch, pk=branch_pk)
+            branch.operating_hours.add(workday)
 
 
 class LeaveRequestViewSet(ModelViewSet):

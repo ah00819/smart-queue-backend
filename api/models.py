@@ -139,6 +139,35 @@ class Organization(models.Model):
         return self.name
 
 
+class WorkDay(models.Model):
+    WEEKDAYS = [
+        (0, "Monday"),
+        (1, "Tuesday"),
+        (2, "Wednesday"),
+        (3, "Thursday"),
+        (4, "Friday"),
+        (5, "Saturday"),
+        (6, "Sunday"),
+    ]
+    # staff_member = models.ForeignKey(
+    #     StaffMember, related_name="workdays", on_delete=models.CASCADE
+    # )
+    weekday = models.IntegerField(choices=WEEKDAYS)
+    from_hour = models.TimeField()
+    to_hour = models.TimeField()
+
+    class Meta:
+        verbose_name = _("Work Day/Operating Hour")
+
+    def __str__(self):
+        return f"{self.get_weekday_display()}: {self.from_hour}-{self.to_hour}"
+
+    def get_weekday_display(self) -> str:
+        return next(
+            (day for idx, day in self.WEEKDAYS if idx == self.weekday), "Unknown Day"
+        )
+
+
 class StaffMember(ProfileMixin):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, unique=True
@@ -153,6 +182,12 @@ class StaffMember(ProfileMixin):
         on_delete=models.CASCADE,
         verbose_name=_("Organization"),
         related_name="staff_members",
+    )
+    workdays = models.ManyToManyField(
+        WorkDay,
+        related_name="staff_members",
+        blank=True,
+        verbose_name=_("Staff Working Hours"),
     )
 
     class Meta:
@@ -241,6 +276,12 @@ class Branch(models.Model):
         blank=True,
         verbose_name=_("Phone Number"),
         help_text=_("Contact phone number"),
+    )
+    operating_hours = models.ManyToManyField(
+        WorkDay,
+        related_name="branches",
+        blank=True,
+        verbose_name=_("Branch Operating Hours"),
     )
     services = models.ManyToManyField(
         Service,
@@ -367,25 +408,6 @@ class ServiceCounter(models.Model):
 
 
 # New Model Replacement of django-appointments
-class WorkDay(models.Model):
-    WEEKDAYS = [
-        (0, "Monday"),
-        (1, "Tuesday"),
-        (2, "Wednesday"),
-        (3, "Thursday"),
-        (4, "Friday"),
-        (5, "Saturday"),
-        (6, "Sunday"),
-    ]
-    staff_member = models.ForeignKey(
-        StaffMember, related_name="workdays", on_delete=models.CASCADE
-    )
-    weekday = models.IntegerField(choices=WEEKDAYS)
-    from_hour = models.TimeField()
-    to_hour = models.TimeField()
-
-    class Meta:
-        unique_together = ("staff_member", "weekday")
 
 
 class LeaveRequest(models.Model):

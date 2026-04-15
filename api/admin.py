@@ -21,6 +21,16 @@ class RequiredDocumentInline(admin.StackedInline):
     extra = 1
 
 
+class StaffWorkDayInline(admin.TabularInline):
+    model = models.StaffMember.workdays.through
+    extra = 1
+
+
+class BranchOperatingHoursInline(admin.TabularInline):
+    model = models.Branch.operating_hours.through
+    extra = 1
+
+
 # Register your models here.
 
 
@@ -54,10 +64,12 @@ class BranchAdmin(admin.ModelAdmin):
     list_display = ["name", "link_organization", "city_display", "is_active"]
     list_select_related = ["organization", "address"]
     list_filter = [("organization", admin.RelatedOnlyFieldListFilter), "is_active"]
+    filter_horizontal = ["services", "operating_hours"]
     autocomplete_fields = ["organization"]
     search_fields = ["name", "organization__name", "email"]
     list_per_page = 20
     ordering = ["organization__name", "name"]
+    inlines = [BranchOperatingHoursInline]
 
     @admin.display(ordering="organization__name", description=_("Organization"))
     def link_organization(self, obj):
@@ -131,6 +143,7 @@ class ServiceAdmin(admin.ModelAdmin):
 class StaffMemberAdmin(admin.ModelAdmin):
     list_display = ["get_full_name", "organization", "phone", "gender"]
     list_filter = ["organization", "gender"]
+    filter_horizontal = ["services_offered", "workdays"]
     search_fields = [
         "user__first_name",
         "user__last_name",
@@ -138,7 +151,7 @@ class StaffMemberAdmin(admin.ModelAdmin):
         "national_id",
     ]
     autocomplete_fields = ["user", "organization"]
-    inlines = [WorkDayInline]
+    inlines = [StaffWorkDayInline]
 
     @admin.display(description=_("Full Name"))
     def get_full_name(self, obj):
@@ -224,3 +237,10 @@ class ServiceFeedbackAdmin(admin.ModelAdmin):
 
     def short_feedback(self, obj):
         return obj.feedback[:50] + "..." if len(obj.feedback) > 50 else obj.feedback
+
+
+@admin.register(models.WorkDay)
+class WorkDayAdmin(admin.ModelAdmin):
+    list_display = ["weekday", "from_hour", "to_hour"]
+    list_filter = ["weekday"]
+    ordering = ["weekday", "from_hour"]

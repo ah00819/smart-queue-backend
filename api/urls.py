@@ -23,6 +23,10 @@ branches_router = routers.NestedDefaultRouter(router, "branches", lookup="branch
 branches_router.register(
     "service-counters", views.ServiceCounterViewSet, basename="branch-service-counters"
 )
+# Not work-days but operating-hours little inconsistency, maybe fix later
+branches_router.register(
+    "operating-hours", views.WorkDayViewSet, basename="branches-operating-hours"
+)
 # =================================================
 staff_members_router = routers.NestedDefaultRouter(
     router, "staff-members", lookup="staff_member"

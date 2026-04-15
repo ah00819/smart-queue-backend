@@ -229,6 +229,8 @@ class StaffMemberSerializer(serializers.ModelSerializer):
 
 
 class CreateStaffMemberSerializer(serializers.ModelSerializer):
+    workdays = WorkDaySerializer(many=True, required=False)
+
     class Meta:
         model = StaffMember
         fields = [
@@ -236,6 +238,7 @@ class CreateStaffMemberSerializer(serializers.ModelSerializer):
             "organization",
             "services_offered",
             "national_id",
+            "workdays",
             "phone",
             "gender",
         ]
@@ -252,11 +255,19 @@ class CreateStaffMemberSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         services = validated_data.pop("services_offered", [])
+        workdays_data = validated_data.pop("workdays", [])
+
         with transaction.atomic():
             staff_member = StaffMember.objects.create(**validated_data)
             staff_member.services_offered.set(services)
+
+            # Create or find the workdays and link them
+            for day_data in workdays_data:
+                day_obj, _ = WorkDay.objects.get_or_create(**day_data)
+                staff_member.workdays.add(day_obj)
+
             # Add to Staff Group
-            staff_group, __ = Group.objects.get_or_create(name=STAFF_GROUP)
+            staff_group, _ = Group.objects.get_or_create(name=STAFF_GROUP)
             staff_member.user.groups.add(staff_group)
             return staff_member
 
@@ -274,6 +285,7 @@ class HolidaySerializer(serializers.ModelSerializer):
 class BranchSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
     services = SimpleServiceSerializer(many=True, read_only=True)
+    operating_hours = WorkDaySerializer(many=True, read_only=True)
 
     class Meta:
         model = Branch
@@ -285,19 +297,30 @@ class BranchSerializer(serializers.ModelSerializer):
             "email",
             "phone",
             "services",
+            "operating_hours",
             "is_active",
         ]
 
 
 class CreateBranchSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
+    operating_hours = WorkDaySerializer(many=True, required=False)
     services = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Service.objects.all(), required=False
     )
 
     class Meta:
         model = Branch
-        fields = ["id", "organization", "name", "email", "phone", "address", "services"]
+        fields = [
+            "id",
+            "organization",
+            "name",
+            "email",
+            "phone",
+            "address",
+            "services",
+            "operating_hours",
+        ]
 
     def validate(self, attrs):
         organization = attrs.get("organization")
@@ -314,15 +337,23 @@ class CreateBranchSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         services = validated_data.pop("services", [])
+        hours_data = validated_data.pop("operating_hours", [])
         address_data = validated_data.pop("address")
+
         with transaction.atomic():
             address = Address.objects.create(**address_data)
             branch = Branch.objects.create(address=address, **validated_data)
             branch.services.set(services)
+
+            for hour in hours_data:
+                hour_obj, _ = WorkDay.objects.get_or_create(**hour)
+                branch.operating_hours.add(hour_obj)
+
             return branch
 
     def update(self, instance, validated_data):
         address_data = validated_data.pop("address", None)
+        hours_data = validated_data.pop("operating_hours", None)
         with transaction.atomic():
             if address_data:
                 address_serializer = AddressSerializer(
@@ -330,7 +361,16 @@ class CreateBranchSerializer(serializers.ModelSerializer):
                 )
                 address_serializer.is_valid(raise_exception=True)
                 address_serializer.save()
-            return super().update(instance, validated_data)
+
+            instance = super().update(instance, validated_data)
+            if hours_data is not None:
+                new_hours = []
+                for hour in hours_data:
+                    hour_obj, _ = WorkDay.objects.get_or_create(**hour)
+                    new_hours.append(hour_obj)
+                instance.operating_hours.set(new_hours)
+
+            return instance
 
 
 # Service Counter Serializer
