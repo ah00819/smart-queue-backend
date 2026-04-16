@@ -100,7 +100,7 @@ class CreateClientSerializer(serializers.ModelSerializer):
 class SimpleServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
-        fields = ["id", "name", "description", "price", "currency", "image"]
+        fields = ["id", "name", "description", "price", "duration", "currency", "image"]
 
 
 from django.db import transaction
