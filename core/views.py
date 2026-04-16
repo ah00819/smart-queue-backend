@@ -47,7 +47,15 @@ class ProfileViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
+        user = self.request.user
+
+        if not user.is_authenticated:
+            return User.objects.none()
+
+        if user.is_staff:
+            return User.objects.all()
+
+        return User.objects.filter(pk=user.pk)
 
     def get_serializer_class(self):
         if self.action == "create":
