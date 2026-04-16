@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework",
     "djoser",
-    "appointment",
+    # "appointment",
     "phonenumber_field",
     "api",  # custom_appointment
     "core",

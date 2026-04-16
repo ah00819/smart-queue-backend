@@ -1,18 +1,27 @@
+import datetime
+
 from django.db import transaction
+from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from appointment.models import (
-    Appointment,
-    AppointmentRequest,
-    Service,
+from .models import (
+    STAFF_GROUP,
+    Client,
+    Organization,
+    Address,
+    Branch,
+    ServiceCounter,
     StaffMember,
-    Config,
-    DayOff,
-    WorkingHours,
+    Service,
+    WorkDay,
+    LeaveRequest,
+    Holiday,
+    Appointment,
+    ServiceFeedback,
+    RequiredDocument,
+    AttachedDocument,
 )
-from .validators import ExactLengthValidator
-from .models import STAFF_GROUP, Client, Organization, Address, Branch, ServiceCounter
 
 
 # Address Serializers
@@ -89,19 +98,24 @@ class CreateClientSerializer(serializers.ModelSerializer):
 
 
 class SimpleServiceSerializer(serializers.ModelSerializer):
-    price = serializers.CharField(source="get_price_text", read_only=True)
-
     class Meta:
         model = Service
-        fields = ["id", "name", "description", "price", "image"]
+        fields = ["id", "name", "description", "price", "currency", "image"]
+
+
+from django.db import transaction
+
+
+class RequiredDocumentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)  # Important for updates
+
+    class Meta:
+        model = RequiredDocument
+        fields = ["id", "name", "description", "is_mandatory"]
 
 
 class ServiceSerializer(serializers.ModelSerializer):
-    currency = serializers.CharField(
-        default="EGP",
-        validators=[ExactLengthValidator(3)],
-        label=_("Currency"),
-    )
+    required_documents = RequiredDocumentSerializer(many=True)
 
     class Meta:
         model = Service
@@ -109,32 +123,75 @@ class ServiceSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "organization",
             "duration",
             "price",
-            "down_payment",
             "currency",
             "image",
             "reschedule_limit",
-            "allow_rescheduling",
+            "required_documents",
+        ]
+
+    def create(self, validated_data):
+        docs_data = validated_data.pop("required_documents", [])
+
+        with transaction.atomic():
+            service = Service.objects.create(**validated_data)
+            for doc in docs_data:
+                RequiredDocument.objects.create(service=service, **doc)
+            return service
+
+    def update(self, instance, validated_data):
+        docs_data = validated_data.pop("required_documents", None)
+
+        with transaction.atomic():
+            instance = super().update(instance, validated_data)
+
+            if docs_data is not None:
+                instance.required_documents.all().delete()
+                for doc in docs_data:
+                    doc.pop("id", None)
+                    RequiredDocument.objects.create(service=instance, **doc)
+
+            return instance
+
+
+# Organization Serializers
+class OrganizationSerializer(serializers.ModelSerializer):
+    is_active = serializers.BooleanField(default=True, read_only=True)
+    services = SimpleServiceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Organization
+        fields = [
+            "id",
+            "name",
+            "code",
+            "brief",
+            "image",
+            "email",
+            "website",
+            "services",
+            "is_active",
         ]
 
 
-# Working Hours Serializers
+# Work Day Serializers
 
 
-class WorkingHoursSerializer(serializers.ModelSerializer):
+class WorkDaySerializer(serializers.ModelSerializer):
     class Meta:
-        model = WorkingHours
-        fields = ["id", "day_of_week", "start_time", "end_time"]
+        model = WorkDay
+        fields = ["id", "weekday", "from_hour", "to_hour"]
 
 
-# Day off Serializers
+# Leave Request (Days Off) Serializers
 
 
-class DayOffSerializer(serializers.ModelSerializer):
+class LeaveRequestSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DayOff
-        fields = ["id", "start_date", "end_date", "description"]
+        model = LeaveRequest
+        fields = ["id", "date", "description", "is_full_day"]
 
 
 # Staff Member Serializers
@@ -151,169 +208,75 @@ class SimpleStaffMemberSerializer(serializers.ModelSerializer):
 
 class StaffMemberSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+    name = serializers.CharField(source="user.get_full_name", read_only=True)
     services_offered = serializers.StringRelatedField(many=True)
-    working_hours = WorkingHoursSerializer(
-        many=True, read_only=True, source="workinghours_set"
-    )
-    days_off = DayOffSerializer(many=True, read_only=True, source="dayoff_set")
+    workdays = WorkDaySerializer(many=True, read_only=True)
 
     class Meta:
         model = StaffMember
         fields = [
             "id",
             "user",
+            "name",
+            "organization",
             "services_offered",
-            "slot_duration",
-            "lead_time",
-            "finish_time",
-            "appointment_buffer_time",
-            "work_on_saturday",
-            "work_on_sunday",
-            "working_hours",
-            "days_off",
+            "workdays",
+            "phone",
+            "national_id",
+            "gender",
+            "image",
         ]
 
 
 class CreateStaffMemberSerializer(serializers.ModelSerializer):
+    workdays = WorkDaySerializer(many=True, required=False)
+
     class Meta:
         model = StaffMember
         fields = [
-            "id",
             "user",
+            "organization",
             "services_offered",
-            "slot_duration",
-            "lead_time",
-            "finish_time",
-            "appointment_buffer_time",
-            "work_on_saturday",
-            "work_on_sunday",
+            "national_id",
+            "workdays",
+            "phone",
+            "gender",
         ]
 
+    def validate(self, attrs):
+        org = attrs.get("organization")
+        services = attrs.get("services_offered", [])
+        for s in services:
+            if s.organization != org:
+                raise serializers.ValidationError(
+                    "Staff cannot offer services from another organization."
+                )
+        return attrs
+
     def create(self, validated_data):
+        services = validated_data.pop("services_offered", [])
+        workdays_data = validated_data.pop("workdays", [])
+
         with transaction.atomic():
-            staff_member = super().create(validated_data)
-            user = staff_member.user
-            staff_group, __ = Group.objects.get_or_create(name=STAFF_GROUP)
-            user.groups.add(staff_group)
-            user.save()
+            staff_member = StaffMember.objects.create(**validated_data)
+            staff_member.services_offered.set(services)
+
+            # Create or find the workdays and link them
+            for day_data in workdays_data:
+                day_obj, _ = WorkDay.objects.get_or_create(**day_data)
+                staff_member.workdays.add(day_obj)
+
+            # Add to Staff Group
+            staff_group, _ = Group.objects.get_or_create(name=STAFF_GROUP)
+            staff_member.user.groups.add(staff_group)
             return staff_member
 
 
-# AppointmentRequest Serializers
-# NOTE: I've no idea what AppointmentRequest.id_request is for!
-
-
-class AppointmentRequestSerializer(serializers.ModelSerializer):
-    service = SimpleServiceSerializer(read_only=True)
-    staff_member = SimpleStaffMemberSerializer(read_only=True)
-
+# Holiday Serializers
+class HolidaySerializer(serializers.ModelSerializer):
     class Meta:
-        model = AppointmentRequest
-        fields = [
-            "id",
-            "date",
-            "start_time",
-            "end_time",
-            "service",
-            "staff_member",
-            "payment_type",
-            "reschedule_attempts",
-            "id_request",
-        ]
-
-
-class CreateAppointmentRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AppointmentRequest
-        fields = [
-            "id",
-            "date",
-            "start_time",
-            "end_time",
-            "service",
-            "staff_member",
-            "payment_type",
-            "reschedule_attempts",
-            "id_request",
-        ]
-
-
-# Appointment Serializers
-
-
-class AppointmentSerializer(serializers.ModelSerializer):
-    # changed the help_text
-    address = serializers.CharField(
-        max_length=255,
-        allow_blank=True,
-        label=_("Address"),
-        help_text=_("Does not have to be specific, just the city and the country"),
-    )
-    # chagned initial to True
-    want_reminder = serializers.BooleanField(
-        initial=True,
-        label=_("Want Reminder"),
-        help_text=_(
-            "Indicates whether the client wants a reminder for the appointment."
-        ),
-    )
-
-    class Meta:
-        model = Appointment
-        fields = [
-            "id",
-            "client",
-            "appointment_request",
-            "phone",  # The client's phone number
-            "address",
-            "want_reminder",
-            "additional_info",
-            "paid",
-            "amount_to_pay",
-            "id_request",  # An ID for the appointment.
-        ]
-        read_only_fields = ["client", "id_request"]
-
-
-# Config Serializers
-
-
-class ConfigSerializer(serializers.ModelSerializer):
-    """App Global Configurations"""
-
-    class Meta:
-        model = Config
-        fields = [
-            "id",
-            "slot_duration",
-            "lead_time",
-            "finish_time",
-            "appointment_buffer_time",
-            "website_name",
-            "app_offered_by_label",
-            "default_reschedule_limit",
-            "allow_staff_change_on_reschedule",
-        ]
-
-
-# Organization Serializers
-
-
-class OrganizationSerializer(serializers.ModelSerializer):
-    is_active = serializers.BooleanField(default=True, read_only=True)
-
-    class Meta:
-        model = Organization
-        fields = [
-            "id",
-            "name",
-            "code",
-            "brief",
-            "image",
-            "email",
-            "website",
-            "is_active",
-        ]
+        model = Holiday
+        fields = ["id", "name", "date"]
 
 
 # Branch Serializers
@@ -321,6 +284,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 class BranchSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
+    services = SimpleServiceSerializer(many=True, read_only=True)
+    operating_hours = WorkDaySerializer(many=True, read_only=True)
 
     class Meta:
         model = Branch
@@ -328,15 +293,21 @@ class BranchSerializer(serializers.ModelSerializer):
             "id",
             "organization",
             "name",
+            "address",
             "email",
             "phone",
-            "address",
+            "services",
+            "operating_hours",
             "is_active",
         ]
 
 
 class CreateBranchSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
+    operating_hours = WorkDaySerializer(many=True, required=False)
+    services = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Service.objects.all(), required=False
+    )
 
     class Meta:
         model = Branch
@@ -347,17 +318,42 @@ class CreateBranchSerializer(serializers.ModelSerializer):
             "email",
             "phone",
             "address",
+            "services",
+            "operating_hours",
         ]
 
+    def validate(self, attrs):
+        organization = attrs.get("organization")
+        services = attrs.get("services", [])
+        # check branch services is subset of its parent organization's
+        for service in services:
+            if service.organization != organization:
+                raise serializers.ValidationError(
+                    {
+                        "services": f"Service '{service.name}' does not belong to organization '{organization.name}'."
+                    }
+                )
+        return attrs
+
     def create(self, validated_data):
+        services = validated_data.pop("services", [])
+        hours_data = validated_data.pop("operating_hours", [])
         address_data = validated_data.pop("address")
+
         with transaction.atomic():
             address = Address.objects.create(**address_data)
             branch = Branch.objects.create(address=address, **validated_data)
+            branch.services.set(services)
+
+            for hour in hours_data:
+                hour_obj, _ = WorkDay.objects.get_or_create(**hour)
+                branch.operating_hours.add(hour_obj)
+
             return branch
 
     def update(self, instance, validated_data):
         address_data = validated_data.pop("address", None)
+        hours_data = validated_data.pop("operating_hours", None)
         with transaction.atomic():
             if address_data:
                 address_serializer = AddressSerializer(
@@ -365,14 +361,23 @@ class CreateBranchSerializer(serializers.ModelSerializer):
                 )
                 address_serializer.is_valid(raise_exception=True)
                 address_serializer.save()
-            return super().update(instance, validated_data)
+
+            instance = super().update(instance, validated_data)
+            if hours_data is not None:
+                new_hours = []
+                for hour in hours_data:
+                    hour_obj, _ = WorkDay.objects.get_or_create(**hour)
+                    new_hours.append(hour_obj)
+                instance.operating_hours.set(new_hours)
+
+            return instance
 
 
 # Service Counter Serializer
 
 
 class ServiceCounterSerializer(serializers.ModelSerializer):
-    branch = BranchSerializer()
+    # branch = BranchSerializer()
     service = SimpleServiceSerializer()
     staff_member = SimpleStaffMemberSerializer()
 
@@ -397,6 +402,185 @@ class CreateServiceCounterSerializer(serializers.ModelSerializer):
                 {"staff_member": _("Staff member cannot offer this service.")}
             )
         return attrs
+
+
+# Attached Document Serializers
+
+
+class AttachedDocumentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = AttachedDocument
+        fields = [
+            "id",
+            "document",
+            "file",
+            "status",
+            "rejection_reason",
+            "uploaded_at",
+        ]
+        read_only_fields = ["status", "rejection_reason", "uploaded_at"]
+
+    def validate(self, attrs):
+        appointment_pk = self.context["view"].kwargs.get("appointment_pk")
+        document_requirement = attrs.get("document")
+
+        if appointment_pk and document_requirement:
+            try:
+                appointment = Appointment.objects.get(pk=appointment_pk)
+                if document_requirement.service != appointment.counter.service:
+                    raise serializers.ValidationError(
+                        _(
+                            "This document is not a requirement for the selected service."
+                        )
+                    )
+            except Appointment.DoesNotExist:
+                raise serializers.ValidationError(_("Invalid appointment."))
+
+        return attrs
+
+
+# Appointment Serializers
+
+
+class AppointmentSerializer(serializers.ModelSerializer):
+    # changed the help_text
+    # address = serializers.CharField(
+    #     max_length=255,
+    #     allow_blank=True,
+    #     label=_("Address"),
+    #     help_text=_("Does not have to be specific, just the city and the country"),
+    # )
+    # chagned initial to True
+    want_reminder = serializers.BooleanField(
+        initial=True,
+        label=_("Want Reminder"),
+        help_text=_(
+            "Indicates whether the client wants a reminder for the appointment."
+        ),
+    )
+    counter = ServiceCounterSerializer(read_only=True)
+    attached_documents = AttachedDocumentSerializer(many=True, required=False)
+
+    class Meta:
+        model = Appointment
+        fields = [
+            "id",
+            "client",
+            "date",
+            "start_time",
+            "end_time",
+            "counter",
+            "want_reminder",
+            "additional_info",
+            "reschedule_attempts",
+            "paid",
+            "amount_to_pay",
+            "attached_documents",
+        ]
+        read_only_fields = ["client", "reschedule_attempts"]
+
+    def create(self, validated_data):
+        docs_data = validated_data.pop("attached_documents", [])
+
+        with transaction.atomic():
+            appointment = Appointment.objects.create(**validated_data)
+            for doc in docs_data:
+                AttachedDocument.objects.create(appointment=appointment, **doc)
+            return appointment
+
+    def update(self, instance, validated_data):
+        docs_data = validated_data.pop("attached_documents", None)
+
+        with transaction.atomic():
+            instance = super().update(instance, validated_data)
+            if docs_data is not None:
+                existing_ids = [d.id for d in instance.attached_documents.all()]
+                for doc in docs_data:
+                    doc_id = doc.pop("id", None)
+                    if doc_id and doc_id in existing_ids:
+                        AttachedDocument.objects.filter(id=doc_id).update(**doc)
+                    else:
+                        AttachedDocument.objects.create(appointment=instance, **doc)
+            return instance
+
+    def validate(self, attrs):
+        counter = attrs.get("counter")
+        date = attrs.get("date")
+        start_time = attrs.get("start_time")
+        end_time = attrs.get("end_time")
+
+        # Ensure end_time is after start_time
+        if start_time >= end_time:
+            raise serializers.ValidationError(_("End time must be after start time."))
+
+        # Check if the duration matches the service
+        expected_duration = counter.service.duration
+        actual_duration = datetime.combine(date, end_time) - datetime.combine(
+            date, start_time
+        )
+        if actual_duration != expected_duration:
+            raise serializers.ValidationError(
+                _(f"Appointment must be exactly {expected_duration} long.")
+            )
+
+        # Validate against working hours
+        work_day = counter.staff_member.workdays.filter(weekday=date.weekday()).first()
+        if (
+            not work_day
+            or start_time < work_day.from_hour
+            or end_time > work_day.to_hour
+        ):
+            raise serializers.ValidationError(
+                _("This counter is closed at the selected time.")
+            )
+
+        # Check for double bookings (Overlaps)
+        overlapping = (
+            Appointment.objects.filter(counter=counter, date=date)
+            .filter(Q(start_time__lt=end_time, end_time__gt=start_time))
+            .exclude(pk=self.instance.pk if self.instance else None)
+        )
+
+        if overlapping.exists():
+            raise serializers.ValidationError(_("This time slot is already booked."))
+
+        return attrs
+
+
+# Service Feedback Serializers
+
+
+class ServiceFeedbackSerializer(serializers.ModelSerializer):
+    appointment = AppointmentSerializer(read_only=True)
+
+    class Meta:
+        model = ServiceFeedback
+        fields = ["client", "appointment", "feedback"]
+
+
+class CreateServiceFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceFeedback
+        fields = ["id", "feedback"]
+
+
+# Required Document Serializers
+
+
+class SimpleRequiredDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RequiredDocument
+        fields = ["service", "name", "description", "is_mandatory"]
+
+
+class RequiredDocumentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = RequiredDocument
+        fields = ["id", "name", "description", "is_mandatory"]
 
 
 # Mixins

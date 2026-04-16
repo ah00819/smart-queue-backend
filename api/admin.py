@@ -5,6 +5,32 @@ from django.utils.translation import gettext_lazy as _
 from . import models
 
 
+class WorkDayInline(admin.TabularInline):
+    model = models.WorkDay
+    extra = 1
+
+
+class AttachedDocumentInline(admin.TabularInline):
+    model = models.AttachedDocument
+    extra = 0
+    readonly_fields = ["uploaded_at"]
+
+
+class RequiredDocumentInline(admin.StackedInline):
+    model = models.RequiredDocument
+    extra = 1
+
+
+class StaffWorkDayInline(admin.TabularInline):
+    model = models.StaffMember.workdays.through
+    extra = 1
+
+
+class BranchOperatingHoursInline(admin.TabularInline):
+    model = models.Branch.operating_hours.through
+    extra = 1
+
+
 # Register your models here.
 
 
@@ -38,10 +64,12 @@ class BranchAdmin(admin.ModelAdmin):
     list_display = ["name", "link_organization", "city_display", "is_active"]
     list_select_related = ["organization", "address"]
     list_filter = [("organization", admin.RelatedOnlyFieldListFilter), "is_active"]
+    filter_horizontal = ["services", "operating_hours"]
     autocomplete_fields = ["organization"]
     search_fields = ["name", "organization__name", "email"]
     list_per_page = 20
     ordering = ["organization__name", "name"]
+    inlines = [BranchOperatingHoursInline]
 
     @admin.display(ordering="organization__name", description=_("Organization"))
     def link_organization(self, obj):
@@ -91,3 +119,128 @@ class ServiceCounterAdmin(admin.ModelAdmin):
     def link_service(self, obj):
         url = reverse("admin:appointment_service_change", args=[obj.service.id])
         return format_html('<a href="{}">{}</a>', url, obj.service.name)
+
+
+@admin.register(models.Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = [
+        "name",
+        "organization",
+        "duration",
+        "price_display",
+        "reschedule_limit",
+    ]
+    list_filter = ["organization", "created_at"]
+    search_fields = ["name", "description"]
+    inlines = [RequiredDocumentInline]
+
+    @admin.display(description=_("Price"))
+    def price_display(self, obj):
+        return obj.get_price_text()
+
+
+@admin.register(models.StaffMember)
+class StaffMemberAdmin(admin.ModelAdmin):
+    list_display = ["get_full_name", "organization", "phone", "gender"]
+    list_filter = ["organization", "gender"]
+    filter_horizontal = ["services_offered", "workdays"]
+    search_fields = [
+        "user__first_name",
+        "user__last_name",
+        "user__email",
+        "national_id",
+    ]
+    autocomplete_fields = ["user", "organization"]
+    inlines = [StaffWorkDayInline]
+
+    @admin.display(description=_("Full Name"))
+    def get_full_name(self, obj):
+        return obj.user.get_full_name() or obj.user.username
+
+
+@admin.register(models.Client)
+class ClientAdmin(admin.ModelAdmin):
+    list_display = ["get_full_name", "phone", "city_display", "is_authenticated"]
+    list_filter = ["is_authenticated", "gender"]
+    search_fields = ["user__first_name", "user__last_name", "national_id", "phone"]
+
+    @admin.display(description=_("Full Name"))
+    def get_full_name(self, obj):
+        return obj.user.get_full_name() or obj.user.username
+
+    @admin.display(description=_("City"))
+    def city_display(self, obj):
+        return obj.address.city if obj.address else "-"
+
+
+@admin.register(models.Appointment)
+class AppointmentAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "client_link",
+        "date",
+        "timeslot",
+        "counter",
+        "paid",
+        "status_tag",
+    ]
+    list_filter = ["paid", "date", "counter__branch"]
+    search_fields = ["client__user__first_name", "client__user__last_name", "id"]
+    date_hierarchy = "date"
+    inlines = [AttachedDocumentInline]
+    readonly_fields = ["created_at", "updated_at"]
+
+    @admin.display(description=_("Time Slot"))
+    def timeslot(self, obj):
+        return f"{obj.start_time.strftime('%H:%M')} - {obj.end_time.strftime('%H:%M')}"
+
+    @admin.display(description=_("Client"))
+    def client_link(self, obj):
+        if obj.client:
+            url = reverse("admin:api_client_change", args=[obj.client.id])
+            return format_html('<a href="{}">{}</a>', url, obj.client)
+        return "-"
+
+    @admin.display(description=_("Status"))
+    def status_tag(self, obj):
+        color = "green" if obj.paid else "orange"
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            "PAID" if obj.paid else "PENDING",
+        )
+
+
+@admin.register(models.Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ["address", "city", "country", "postal_code"]
+    search_fields = ["address", "city"]
+
+
+@admin.register(models.LeaveRequest)
+class LeaveRequestAdmin(admin.ModelAdmin):
+    list_display = ["staff_member", "date", "is_full_day", "description"]
+    list_filter = ["date", "is_full_day", "staff_member"]
+    search_fields = ["staff_member__user__first_name", "description"]
+
+
+@admin.register(models.Holiday)
+class HolidayAdmin(admin.ModelAdmin):
+    list_display = ["name", "date"]
+    list_sortable = ["date"]
+
+
+@admin.register(models.ServiceFeedback)
+class ServiceFeedbackAdmin(admin.ModelAdmin):
+    list_display = ["client", "appointment", "short_feedback"]
+    readonly_fields = ["client", "appointment"]
+
+    def short_feedback(self, obj):
+        return obj.feedback[:50] + "..." if len(obj.feedback) > 50 else obj.feedback
+
+
+@admin.register(models.WorkDay)
+class WorkDayAdmin(admin.ModelAdmin):
+    list_display = ["weekday", "from_hour", "to_hour"]
+    list_filter = ["weekday"]
+    ordering = ["weekday", "from_hour"]

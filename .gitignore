@@ -2,6 +2,7 @@ services
 .vscode
 media
 Routes.txt
+api/management/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
