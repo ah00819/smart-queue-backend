@@ -23,12 +23,8 @@ class CreateProfileClientSerializer(serializers.ModelSerializer):
         ]
 
 
-class UpdateAddressSerializer(BaseAddressSerializer):
-    class Meta(BaseAddressSerializer.Meta):
-        validators = []
-
 class UpdateProfileClientSerializer(serializers.ModelSerializer):
-    address = UpdateAddressSerializer(required=False, allow_null=True)
+    address = BaseAddressSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Client

@@ -98,7 +98,7 @@ DATABASES = {
         # NOTE: This is be temprary; during development
         "HOST": "localhost",
         "USER": "root",
-        "PASSWORD": "root",
+        "PASSWORD": "Myroot$21#",
     }
 }
 
@@ -178,5 +178,3 @@ SPECTACULAR_SETTINGS = {
     "REDOC_DIST": "SIDECAR",
     # OTHER SETTINGS
 }
-# To Accept Egyptian Phone Numbers
-PHONENUMBER_DEFAULT_REGION = "EG"
