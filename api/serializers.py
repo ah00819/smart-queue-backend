@@ -1,4 +1,5 @@
 import datetime
+from datetime import datetime, date as date_obj
 
 from django.db import transaction
 from django.db.models import Q
@@ -460,6 +461,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "Indicates whether the client wants a reminder for the appointment."
         ),
     )
+    counter_id = serializers.PrimaryKeyRelatedField(
+        queryset=ServiceCounter.objects.all(), source="counter", write_only=True
+    )
     counter = ServiceCounterSerializer(read_only=True)
     attached_documents = AttachedDocumentSerializer(many=True, required=False)
 
@@ -468,10 +472,11 @@ class AppointmentSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "client",
+            "counter",  # Output
+            "counter_id",  # Input
             "date",
             "start_time",
             "end_time",
-            "counter",
             "want_reminder",
             "additional_info",
             "reschedule_attempts",
@@ -479,7 +484,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "amount_to_pay",
             "attached_documents",
         ]
-        read_only_fields = ["client", "reschedule_attempts"]
+        read_only_fields = ["client", "end_time", "reschedule_attempts"]
 
     def create(self, validated_data):
         docs_data = validated_data.pop("attached_documents", [])
@@ -509,42 +514,56 @@ class AppointmentSerializer(serializers.ModelSerializer):
         counter = attrs.get("counter")
         date = attrs.get("date")
         start_time = attrs.get("start_time")
-        end_time = attrs.get("end_time")
 
-        # Ensure end_time is after start_time
-        if start_time >= end_time:
-            raise serializers.ValidationError(_("End time must be after start time."))
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            try:
+                client_profile = request.user.client
+            except Client.DoesNotExist:
+                raise serializers.ValidationError(
+                    _("User does not have a client profile.")
+                )
+        else:
+            client_profile = None
 
-        # Check if the duration matches the service
-        expected_duration = counter.service.duration
-        actual_duration = datetime.combine(date, end_time) - datetime.combine(
-            date, start_time
+        existing_client_appointment = Appointment.objects.filter(
+            client=client_profile,
+            counter=counter,
+            date__gte=datetime.now().date(),
+            canceled=False,
+        ).exclude(pk=self.instance.pk if self.instance else None)
+
+        if existing_client_appointment.exists():
+            raise serializers.ValidationError(
+                _("You already have a pending appointment for this counter.")
+            )
+
+        duration = counter.service.duration
+        start_datetime = datetime.combine(date, start_time)
+        calculated_end_time = (start_datetime + duration).time()
+        attrs["end_time"] = calculated_end_time
+
+        available_slots = counter.get_available_slots(date)
+        requested_start_str = start_time.strftime("%H:%M")
+        is_valid_slot = any(
+            slot["start"] == requested_start_str for slot in available_slots
         )
-        if actual_duration != expected_duration:
+
+        if not is_valid_slot:
             raise serializers.ValidationError(
-                _(f"Appointment must be exactly {expected_duration} long.")
+                _(
+                    "The selected time slot is not available for this service on this date."
+                )
             )
 
-        # Validate against working hours
-        work_day = counter.staff_member.workdays.filter(weekday=date.weekday()).first()
-        if (
-            not work_day
-            or start_time < work_day.from_hour
-            or end_time > work_day.to_hour
-        ):
-            raise serializers.ValidationError(
-                _("This counter is closed at the selected time.")
-            )
-
-        # Check for double bookings (Overlaps)
         overlapping = (
             Appointment.objects.filter(counter=counter, date=date)
-            .filter(Q(start_time__lt=end_time, end_time__gt=start_time))
+            .filter(Q(start_time__lt=calculated_end_time, end_time__gt=start_time))
             .exclude(pk=self.instance.pk if self.instance else None)
         )
 
         if overlapping.exists():
-            raise serializers.ValidationError(_("This time slot is already booked."))
+            raise serializers.ValidationError(_("This slot was just booked."))
 
         return attrs
 

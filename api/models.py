@@ -493,6 +493,7 @@ class Appointment(models.Model):
             "If 0, it means the appointment is free or already paid."
         ),
     )
+    canceled = models.BooleanField(default=False, verbose_name=_("Canceled"))
     # meta datas
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
