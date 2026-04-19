@@ -538,6 +538,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 _("You already have a pending appointment for this counter.")
             )
 
+        if not counter.service or not counter.is_operational:
+            raise serializers.ValidationError(
+                _("This counter is currently unavaliable.")
+            )
         duration = counter.service.duration
         start_datetime = datetime.combine(date, start_time)
         calculated_end_time = (start_datetime + duration).time()
