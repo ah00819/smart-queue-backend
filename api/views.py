@@ -1,16 +1,6 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from .models import (
-    Appointment,
-    AttachedDocument,
-    LeaveRequest,
-    RequiredDocument,
-    ServiceFeedback,
-    StaffMember,
-    Service,
-    WorkDay,
-)
-
+from .models import *
 from api.pagenation import DefaultPagination
 from .permissions import (
     IsAdminOrReadOnly,
@@ -19,28 +9,8 @@ from .permissions import (
     IsStaffMemberOrAdminOrReadOnly,
 )
 from .models import Client, Organization, Branch, ServiceCounter
-from .serializers import (
-    AttachedDocumentSerializer,
-    ClientSerializer,
-    AppointmentSerializer,
-    CreateBranchSerializer,
-    CreateClientSerializer,
-    CreateServiceCounterSerializer,
-    CreateServiceFeedbackSerializer,
-    CreateStaffMemberSerializer,
-    LeaveRequestSerializer,
-    ReadWriteSerializerMixin,
-    RequiredDocumentSerializer,
-    ServiceFeedbackSerializer,
-    StaffMemberSerializer,
-    WorkDaySerializer,
-    ServiceSerializer,
-    OrganizationSerializer,
-    BranchSerializer,
-    ServiceCounterSerializer,
-)
+from .serializers import *
 from rest_framework.decorators import action
-
 from datetime import date as date_obj
 from django.utils import timezone
 from rest_framework.response import Response

@@ -1,28 +1,11 @@
 import datetime
-from datetime import datetime, date as date_obj
-
+from datetime import datetime
 from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from .models import (
-    STAFF_GROUP,
-    Client,
-    Organization,
-    Address,
-    Branch,
-    ServiceCounter,
-    StaffMember,
-    Service,
-    WorkDay,
-    LeaveRequest,
-    Holiday,
-    Appointment,
-    ServiceFeedback,
-    RequiredDocument,
-    AttachedDocument,
-)
+from .models import *
 
 
 # Address Serializers
