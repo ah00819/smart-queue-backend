@@ -16,6 +16,9 @@ django-phonenumber-field = {extras = ["phonenumbers"], version = "*"}
 drf-spectacular = "*"
 drf-spectacular-sidecar = "*"
 mysqlclient = "*"
+python-dotenv = "*"
+google-generativeai = "*"
+pillow = "*"
 
 [dev-packages]
 pylint-django = "*"
