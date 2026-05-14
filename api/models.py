@@ -494,6 +494,12 @@ class Appointment(models.Model):
         ),
     )
     canceled = models.BooleanField(default=False, verbose_name=_("Canceled"))
+    # this is used to add penalties on the client later
+    missed = models.BooleanField(
+        default=False,
+        verbose_name=_("Missed"),
+        help_text=_("Missed the Appointment time"),
+    )
     # meta datas
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))

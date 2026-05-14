@@ -16,7 +16,6 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-
 # Create your views here.
 
 
@@ -56,8 +55,17 @@ class AppointmentViewSet(ModelViewSet):
         return queryset.filter(client__user=user)
 
     def perform_create(self, serializer):
-        client = Client.objects.get(user=self.request.user)
-        serializer.save(client=client)
+        user = self.request.user
+        if user.is_staff and "client" in self.request.data:
+            serializer.save()
+        else:
+            try:
+                client_profile = Client.objects.get(user=user)
+                serializer.save(client=client_profile)
+            except Client.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Only users with a Client profile can book appointments."
+                )
 
 
 class StaffMemberViewSet(ReadWriteSerializerMixin, ModelViewSet):
