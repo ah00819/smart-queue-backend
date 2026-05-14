@@ -71,9 +71,14 @@ Install Pipenv using python package manager:
    }
    ```
 
+Note: Migration files may cause an issue, so you may remove them before proceeding
+
+_because of this project dependency on appointment library, it causes some issues if the library "django-appointments" tables wasn't created first_
+
 6. Run migrations to create the database schema
 
    ```sh
+   python manage.py migrate appointment
    python manage.py migrate
    ```
 

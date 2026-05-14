@@ -6,14 +6,22 @@ name = "pypi"
 [packages]
 django = "*"
 django-debug-toolbar = "*"
-mysqlclient = "*"
 djangorestframework = "*"
 drf-nested-routers = "*"
 django-filter = "*"
 djangorestframework-simplejwt = "*"
 djoser = "*"
+django-appointment = "*"
+django-phonenumber-field = {extras = ["phonenumbers"], version = "*"}
+drf-spectacular = "*"
+drf-spectacular-sidecar = "*"
+mysqlclient = "*"
 
 [dev-packages]
+pylint-django = "*"
+pytest = "*"
+pytest-django = "*"
+model-bakery = "*"
 
 [requires]
 python_version = "3.13"

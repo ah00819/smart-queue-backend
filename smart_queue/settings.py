@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -42,7 +43,12 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework",
     "djoser",
+    # "appointment",
+    "phonenumber_field",
+    "api",  # custom_appointment
     "core",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
 
 MIDDLEWARE = [
@@ -132,18 +138,43 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 REST_FRAMEWORK = {
     "COERCE_DECIMAL_TO_STRING": False,
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("JWT",),
 }
 if DEBUG:
-    SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(days=1)
+    SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] = timedelta(days=400)
+
+AUTHENTICATION_BACKENDS = [
+    "core.backends.NationalIDBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 AUTH_USER_MODEL = "core.User"
+
+APPOINTMENT_WEBSITE_NAME = "Smart Queue"
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Smart Queue API",
+    "DESCRIPTION": "Smart Queue project description...",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # Sidecar
+    "SWAGGER_UI_DIST": "SIDECAR",  # shorthand to use the sidecar instead
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
+    # OTHER SETTINGS
+}
