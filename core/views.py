@@ -10,6 +10,12 @@ from .serializers import (
     SimpleProfileSerializer,
     UpdateProfileSerializer,
 )
+from django.conf import settings
+from PIL import Image
+import google.generativeai as genai
+import json
+import io
+from rest_framework.views import APIView
 
 # Create your views here.
 
@@ -89,3 +95,66 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 class NationalIDTokenView(TokenObtainPairView):
     serializer_class = NationalIDTokenSerializer
+
+
+# إعداد Gemini
+genai.configure(api_key=settings.GEMINI_API_KEY)
+
+class ExtractIDCardView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        image_file = request.FILES.get('image')
+        if not image_file:
+            return Response(
+                {'error': 'من فضلك ابعت صورة'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            image = Image.open(io.BytesIO(image_file.read()))
+            model = genai.GenerativeModel('gemini-3-flash-preview')
+
+            prompt = """
+هذه صورة بطاقة هوية مصرية.
+استخرج البيانات التالية وأرجعها كـ JSON فقط بدون أي نص إضافي:
+{
+    "national_id": "الرقم القومي المكون من 14 رقم",
+    "name_arabic": "الاسم بالعربي",
+    "address": "العنوان كامل"
+}
+إذا لم تتمكن من قراءة أي حقل اكتب null
+"""
+
+            response = model.generate_content([prompt, image])
+            response_text = response.text.strip()
+            response_text = response_text.replace('```json', '').replace('```', '').strip()
+            data = json.loads(response_text)
+
+            missing_fields = []
+            for field in ['national_id', 'name_arabic', 'address']:
+                if not data.get(field) or data.get(field) == 'null':
+                    missing_fields.append(field)
+
+            if missing_fields:
+                return Response({
+                    'success': False,
+                    'error': 'الصورة مش واضحة، صور تاني',
+                    'missing_fields': missing_fields
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({
+                'success': True,
+                'data': data
+            }, status=status.HTTP_200_OK)
+
+        except json.JSONDecodeError:
+            return Response(
+                {'error': 'فشل في قراءة البيانات من الصورة'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
