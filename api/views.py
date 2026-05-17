@@ -267,3 +267,18 @@ class ServiceFeedbackViewSet(ReadWriteSerializerMixin, ModelViewSet):
                 "You have already provided feedback for this appointment."
             )
         serializer.save(client=client, appointment=appointment)
+
+from rest_framework import generics
+from .models import Notification
+from .serializers import NotificationSerializer
+
+
+class NotificationListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        client_id = self.request.query_params.get("client_id")
+
+        return Notification.objects.filter(
+            client_id=client_id
+        ).order_by("-created_at")

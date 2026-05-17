@@ -463,12 +463,18 @@ class Appointment(models.Model):
         help_text=_("Number of times this appointment has been rescheduled."),
     )
     want_reminder = models.BooleanField(
-        default=False,
-        verbose_name=_("Want Reminder"),
-        help_text=_(
-            "Indicates whether the client wants a reminder for the appointment."
+    default=False,
+    verbose_name=_("Want Reminder"),
+    help_text=_(
+        "Indicates whether the client wants a reminder for the appointment."
         ),
     )
+
+    reminder_24_sent = models.BooleanField(default=False)
+
+    reminder_1h_sent = models.BooleanField(default=False)
+    
+
     additional_info = models.TextField(
         blank=True,
         null=True,
@@ -597,3 +603,21 @@ class AttachedDocument(models.Model):
     class Meta:
         verbose_name = _("Appointment Document")
         verbose_name_plural = _("Appointment Documents")
+        
+class Notification(models.Model):
+    client = models.ForeignKey(
+        Client,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+
+    title = models.CharField(max_length=255)
+
+    body = models.TextField()
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.client} - {self.title}"

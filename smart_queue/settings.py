@@ -97,7 +97,6 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "smart_queue",
-        # NOTE: This is be temprary; during development
         "HOST": "localhost",
         "USER": "root",
         "PASSWORD": "123456",
