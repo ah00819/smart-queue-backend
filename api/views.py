@@ -16,7 +16,6 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-
 # Create your views here.
 
 
@@ -268,6 +267,7 @@ class ServiceFeedbackViewSet(ReadWriteSerializerMixin, ModelViewSet):
             )
         serializer.save(client=client, appointment=appointment)
 
+
 from rest_framework import generics
 from .models import Notification
 from .serializers import NotificationSerializer
@@ -279,6 +279,4 @@ class NotificationListView(generics.ListAPIView):
     def get_queryset(self):
         client_id = self.request.query_params.get("client_id")
 
-        return Notification.objects.filter(
-            client_id=client_id
-        ).order_by("-created_at")
+        return Notification.objects.filter(client_id=client_id).order_by("-created_at")

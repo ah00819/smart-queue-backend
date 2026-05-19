@@ -312,9 +312,11 @@ class CreateBranchSerializer(serializers.ModelSerializer):
 
         for service in services:
             if service.organization != organization:
-                raise serializers.ValidationError({
-                "services": f"Service '{service.name}' does not belong to organization '{organization.name}'."
-            })
+                raise serializers.ValidationError(
+                    {
+                        "services": f"Service '{service.name}' does not belong to organization '{organization.name}'."
+                    }
+                )
 
         return attrs
 
@@ -597,6 +599,7 @@ class ReadWriteSerializerMixin:
         if self.action in ("create", "update", "partial_update"):
             return self.write_serializer
         return self.read_serializer
+
 
 from .models import Notification
 

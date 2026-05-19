@@ -13,72 +13,48 @@ router.register("organizations", views.OrganizationViewSet, basename="organizati
 router.register("branches", views.BranchViewSet, basename="branches")
 
 router.register(
-    "service-counters",
-    views.ServiceCounterViewSet,
-    basename="service-counters"
+    "service-counters", views.ServiceCounterViewSet, basename="service-counters"
 )
 
 # =================================================
 
 organizations_router = routers.NestedDefaultRouter(
-    router,
-    "organizations",
-    lookup="organization"
+    router, "organizations", lookup="organization"
 )
 
 organizations_router.register(
-    "branches",
-    views.BranchViewSet,
-    basename="organization-branches"
+    "branches", views.BranchViewSet, basename="organization-branches"
 )
 
 # =================================================
 
-branches_router = routers.NestedDefaultRouter(
-    router,
-    "branches",
-    lookup="branch"
+branches_router = routers.NestedDefaultRouter(router, "branches", lookup="branch")
+
+branches_router.register(
+    "service-counters", views.ServiceCounterViewSet, basename="branch-service-counters"
 )
 
 branches_router.register(
-    "service-counters",
-    views.ServiceCounterViewSet,
-    basename="branch-service-counters"
-)
-
-branches_router.register(
-    "operating-hours",
-    views.WorkDayViewSet,
-    basename="branches-operating-hours"
+    "operating-hours", views.WorkDayViewSet, basename="branches-operating-hours"
 )
 
 # =================================================
 
 staff_members_router = routers.NestedDefaultRouter(
-    router,
-    "staff-members",
-    lookup="staff_member"
+    router, "staff-members", lookup="staff_member"
 )
 
 staff_members_router.register(
-    "work-days",
-    views.WorkDayViewSet,
-    basename="staff-member-work-days"
+    "work-days", views.WorkDayViewSet, basename="staff-member-work-days"
 )
 
 staff_members_router.register(
-    "leave-requests",
-    views.LeaveRequestViewSet,
-    basename="staff-member-leave-requests"
+    "leave-requests", views.LeaveRequestViewSet, basename="staff-member-leave-requests"
 )
 
 # =================================================
 
-service_router = routers.NestedSimpleRouter(
-    router,
-    "services",
-    lookup="service"
-)
+service_router = routers.NestedSimpleRouter(router, "services", lookup="service")
 
 service_router.register(
     "required-documents",
@@ -89,31 +65,21 @@ service_router.register(
 # =================================================
 
 appointment_router = routers.NestedSimpleRouter(
-    router,
-    "appointments",
-    lookup="appointment"
+    router, "appointments", lookup="appointment"
 )
 
 appointment_router.register(
-    "documents",
-    views.AttachedDocumentViewSet,
-    basename="appointment-documents"
+    "documents", views.AttachedDocumentViewSet, basename="appointment-documents"
 )
 
 appointment_router.register(
-    "feedback",
-    views.ServiceFeedbackViewSet,
-    basename="appointment-feedback"
+    "feedback", views.ServiceFeedbackViewSet, basename="appointment-feedback"
 )
 
 # =================================================
 
 urlpatterns = [
-    path(
-        "notifications/",
-        NotificationListView.as_view(),
-        name="notifications"
-    ),
+    path("notifications/", NotificationListView.as_view(), name="notifications"),
 ]
 
 urlpatterns += (
