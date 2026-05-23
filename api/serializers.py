@@ -522,10 +522,24 @@ class AppointmentSerializer(serializers.ModelSerializer):
             )
 
         request = self.context.get("request")
-
         is_staff = request and request.user.is_authenticated and request.user.is_staff
 
         if is_staff:
+            duration = counter.service.duration
+            start_datetime = datetime.combine(date, start_time)
+            attrs["end_time"] = (start_datetime + duration).time()
+            return attrs
+
+        is_canceling = attrs.get("canceled", False) is True
+
+        is_schedule_unchanged = (
+            self.instance
+            and attrs.get("counter") is None
+            and attrs.get("date") is None
+            and attrs.get("start_time") is None
+        )
+
+        if is_canceling or is_schedule_unchanged:
             duration = counter.service.duration
             start_datetime = datetime.combine(date, start_time)
             attrs["end_time"] = (start_datetime + duration).time()
