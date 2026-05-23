@@ -100,7 +100,7 @@ DATABASES = {
         # NOTE: This is be temprary; during development
         "HOST": "localhost",
         "USER": "root",
-        "PASSWORD": "123456",
+        "PASSWORD": "root",
     }
 }
 
@@ -182,4 +182,4 @@ SPECTACULAR_SETTINGS = {
 }
 
 
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

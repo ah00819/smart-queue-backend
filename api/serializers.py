@@ -508,11 +508,29 @@ class AppointmentSerializer(serializers.ModelSerializer):
             return instance
 
     def validate(self, attrs):
-        counter = attrs.get("counter")
-        date = attrs.get("date")
-        start_time = attrs.get("start_time")
+        counter = attrs.get("counter") or (
+            self.instance.counter if self.instance else None
+        )
+        date = attrs.get("date") or (self.instance.date if self.instance else None)
+        start_time = attrs.get("start_time") or (
+            self.instance.start_time if self.instance else None
+        )
+
+        if not counter or not date or not start_time:
+            raise serializers.ValidationError(
+                _("Counter, date, and start time are required.")
+            )
 
         request = self.context.get("request")
+
+        is_staff = request and request.user.is_authenticated and request.user.is_staff
+
+        if is_staff:
+            duration = counter.service.duration
+            start_datetime = datetime.combine(date, start_time)
+            attrs["end_time"] = (start_datetime + duration).time()
+            return attrs
+
         if request and request.user.is_authenticated:
             try:
                 client_profile = request.user.client
@@ -537,8 +555,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
         if not counter.service or not counter.is_operational:
             raise serializers.ValidationError(
-                _("This counter is currently unavaliable.")
+                _("This counter is currently unavailable.")
             )
+
         duration = counter.service.duration
         start_datetime = datetime.combine(date, start_time)
         calculated_end_time = (start_datetime + duration).time()
