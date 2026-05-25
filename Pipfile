@@ -19,6 +19,7 @@ mysqlclient = "*"
 python-dotenv = "*"
 google-generativeai = "*"
 pillow = "*"
+apscheduler = "*"
 
 [dev-packages]
 pylint-django = "*"
