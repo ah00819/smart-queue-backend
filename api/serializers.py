@@ -307,9 +307,9 @@ class CreateBranchSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        organization = attrs.get("organization")
+        organization = attrs.get("organization", self.instance.organization)
         services = attrs.get("services", [])
-        # check branch services is subset of its parent organization's
+
         for service in services:
             if service.organization != organization:
                 raise serializers.ValidationError(
@@ -317,6 +317,7 @@ class CreateBranchSerializer(serializers.ModelSerializer):
                         "services": f"Service '{service.name}' does not belong to organization '{organization.name}'."
                     }
                 )
+
         return attrs
 
     def create(self, validated_data):
@@ -645,3 +646,12 @@ class ReadWriteSerializerMixin:
         if self.action in ("create", "update", "partial_update"):
             return self.write_serializer
         return self.read_serializer
+
+
+from .models import Notification
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = "__all__"
