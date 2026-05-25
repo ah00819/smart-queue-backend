@@ -11,7 +11,6 @@ def create_notification(client, title, body):
 
 def send_reminders():
     now = timezone.now()
-
     appointments = Appointment.objects.filter(
         canceled=False,
         want_reminder=True,
@@ -23,7 +22,6 @@ def send_reminders():
         )
 
         diff = appointment_datetime - now
-
         total_minutes = int(diff.total_seconds() / 60)
 
         # Reminder before 24 hours

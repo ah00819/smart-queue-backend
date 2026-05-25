@@ -310,6 +310,7 @@ class CreateBranchSerializer(serializers.ModelSerializer):
         organization = attrs.get("organization", self.instance.organization)
         services = attrs.get("services", [])
 
+        # check branch services is subset of its parent organization's
         for service in services:
             if service.organization != organization:
                 raise serializers.ValidationError(
@@ -646,9 +647,6 @@ class ReadWriteSerializerMixin:
         if self.action in ("create", "update", "partial_update"):
             return self.write_serializer
         return self.read_serializer
-
-
-from .models import Notification
 
 
 class NotificationSerializer(serializers.ModelSerializer):

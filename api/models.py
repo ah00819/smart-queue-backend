@@ -471,7 +471,6 @@ class Appointment(models.Model):
     )
 
     reminder_24_sent = models.BooleanField(default=False)
-
     reminder_1h_sent = models.BooleanField(default=False)
 
     additional_info = models.TextField(
@@ -614,13 +613,9 @@ class Notification(models.Model):
     client = models.ForeignKey(
         Client, on_delete=models.CASCADE, related_name="notifications"
     )
-
     title = models.CharField(max_length=255)
-
     body = models.TextField()
-
     is_read = models.BooleanField(default=False)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
