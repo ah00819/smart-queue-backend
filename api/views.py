@@ -16,6 +16,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError, PermissionDenied
 
 # Create your views here.
 
@@ -266,13 +267,13 @@ class ServiceFeedbackViewSet(ReadWriteSerializerMixin, ModelViewSet):
         client = get_object_or_404(Client, user=self.request.user)
 
         if appointment.client != client:
-            raise serializer.PermissionDenied(
+            raise PermissionDenied(
                 "You can only provide feedback for your own appointments."
             )
         if ServiceFeedback.objects.filter(
             client=client, appointment=appointment
         ).exists():
-            raise serializer.ValidationError(
+            raise ValidationError(
                 "You have already provided feedback for this appointment."
             )
         serializer.save(client=client, appointment=appointment)

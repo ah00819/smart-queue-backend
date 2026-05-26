@@ -608,7 +608,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 
 class ServiceFeedbackSerializer(serializers.ModelSerializer):
-    appointment = AppointmentSerializer(read_only=True)
+    # appointment = AppointmentSerializer(read_only=True)
 
     class Meta:
         model = ServiceFeedback
