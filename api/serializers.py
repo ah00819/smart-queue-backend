@@ -557,6 +557,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         else:
             client_profile = None
 
+        # Prevent duplicate active bookings on the SAME counter
         existing_client_appointment = Appointment.objects.filter(
             client=client_profile,
             counter=counter,
@@ -574,11 +575,25 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 _("This counter is currently unavailable.")
             )
 
+        # Calculate times for overlap checking
         duration = counter.service.duration
         start_datetime = datetime.combine(date, start_time)
         calculated_end_time = (start_datetime + duration).time()
         attrs["end_time"] = calculated_end_time
 
+        # Check available time window for new appointments
+        client_time_overlap = (
+            Appointment.objects.filter(client=client_profile, date=date, canceled=False)
+            .filter(Q(start_time__lt=calculated_end_time, end_time__gt=start_time))
+            .exclude(pk=self.instance.pk if self.instance else None)
+        )
+
+        if client_time_overlap.exists():
+            raise serializers.ValidationError(
+                _("You have another appointment scheduled during this time frame.")
+            )
+
+        # Validate dynamic slots from counter capacity
         available_slots = counter.get_available_slots(date)
         requested_start_str = start_time.strftime("%H:%M")
         is_valid_slot = any(
