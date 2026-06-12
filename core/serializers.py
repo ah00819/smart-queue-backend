@@ -4,8 +4,9 @@ from rest_framework import serializers, exceptions
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from api.serializers import BaseAddressSerializer, ClientSerializer
 from api.models import Address, Client
-from .models import User
-
+from .models import SMSVerificationCode, User
+from rest_framework import serializers
+from phonenumber_field.modelfields import PhoneNumberField
 
 class CreateProfileClientSerializer(serializers.ModelSerializer):
     address = BaseAddressSerializer(required=False, allow_null=True)
@@ -56,21 +57,55 @@ class CreateProfileSerializer(serializers.ModelSerializer):
 
     client = CreateProfileClientSerializer()
     password = serializers.CharField(write_only=True, style={"input_type": "password"})
+    verification_token = serializers.UUIDField(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "password", "client"]
+        fields = ["id", "username", "email", "password", "client", "verification_token"]
+
+    def validate(self, attrs):
+        token = attrs.pop("verification_token", None)
+        client_data = attrs.get("client", {})
+        phone_number = client_data.get("phone")
+
+        if phone_number:
+            phone_str = str(phone_number)
+            if Client.objects.filter(phone=phone_number).exists():
+                raise serializers.ValidationError(
+                    {"client": {"phone": "This phone number is already registered."}}
+                )
+            if not token:
+                raise serializers.ValidationError(
+                    {"verification_token": "A verification token is required when providing a phone number."}
+                )
+            sms_record = SMSVerificationCode.objects.filter(
+                session_token=token, phone=phone_str, is_verified=True, is_used=False
+            ).last()
+            if not sms_record or sms_record.is_expired():
+                raise serializers.ValidationError(
+                    {"verification_token": "Phone number registration session is invalid or expired."}
+                )
+            attrs["_sms_record"] = sms_record
+        else:
+            attrs["_sms_record"] = None
+            
+        return attrs
 
     def create(self, validated_data):
+        sms_record = validated_data.pop("_sms_record", None)
         client_data = validated_data.pop("client")
         address_data = client_data.pop("address", None)
 
         with transaction.atomic():
             user = User.objects.create_user(**validated_data)
-
             address = Address.objects.create(**address_data) if address_data else None
-
             Client.objects.create(user=user, address=address, **client_data)
+
+            if sms_record:
+                sms_record.user = user
+                sms_record.is_used = True
+                sms_record.save()
+                
         return user
 
 
@@ -138,3 +173,59 @@ class NationalIDTokenSerializer(TokenObtainPairSerializer):
 
         attrs["username"] = client.user.username
         return super().validate(attrs)
+
+class RequestSMSCodeSerializer(serializers.Serializer):
+    phone = PhoneNumberField()
+
+
+class VerifySMSCodeSerializer(serializers.Serializer):
+    phone = PhoneNumberField()
+    code = serializers.CharField(max_length=6, min_length=6)
+    purpose = serializers.ChoiceField(choices=["register", "reset_password"])
+
+    def validate(self, attrs):
+        phone = attrs.get("phone")
+        code = attrs.get("code")
+        purpose = attrs.get("purpose")
+
+        if purpose == "reset_password" and not Client.objects.filter(phone=phone).exists():
+            raise serializers.ValidationError({"phone": "No registered user found with this number."})
+            
+        if purpose == "register" and Client.objects.filter(phone=phone).exists():
+            raise serializers.ValidationError({"phone": "This phone number is already registered."})
+
+        # Find code record linked to the phone number directly
+        sms_record = SMSVerificationCode.objects.filter(
+            phone=phone, code=code, is_used=False, is_verified=False
+        ).last()
+
+        if not sms_record:
+            raise serializers.ValidationError({"code": "Invalid verification code."})
+
+        if sms_record.is_expired():
+            sms_record.is_used = True
+            sms_record.save()
+            raise serializers.ValidationError({"code": "This code has expired. Request a new one."})
+
+        attrs["sms_record"] = sms_record
+        return attrs
+
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    session_token = serializers.UUIDField()
+    new_password = serializers.CharField(write_only=True, min_length=8, style={"input_type": "password"})
+
+    def validate(self, attrs):
+        token = attrs.get("session_token")
+        
+        # Ensure the token matches a verified, unexpired session that hasn't been closed/used yet
+        sms_record = SMSVerificationCode.objects.filter(
+            session_token=token, is_verified=True, is_used=False
+        ).last()
+
+        if not sms_record or sms_record.is_expired():
+            raise serializers.ValidationError({"session_token": "Session invalid or expired. Restart the process."})
+
+        attrs["sms_record"] = sms_record
+        attrs["user"] = sms_record.user
+        return attrs
