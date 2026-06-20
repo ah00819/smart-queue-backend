@@ -31,34 +31,18 @@ from django.db import transaction
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    """
-    Anonymous Users: return a serializer that allows POST only
-    Authenticated Users: return a serializer that allows all but POST
-    """
 
     def initial(self, request, *args, **kwargs):
         user = self.request.user
         if user.is_anonymous:
             self.http_method_names = ["post", "head", "options"]
         else:
-            self.http_method_names = [
-                "get",
-                "put",
-                "patch",
-                "delete",
-                "head",
-                "options",
-            ]
+            self.http_method_names = ["get", "put", "patch", "delete", "head", "options"]
             # dirty fix, 'options' is currenty useless
             if self.action == "me":
                 self.http_method_names.remove("options")
 
         return super().initial(request, *args, **kwargs)
-
-    def get_permissions(self):
-        if self.action == "create":
-            return [AllowAny()]
-        return [IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
@@ -72,16 +56,29 @@ class ProfileViewSet(viewsets.ModelViewSet):
         return User.objects.filter(pk=user.pk)
 
     def get_serializer_class(self):
+        # Handle SMS actions
+        if self.action in ["reset_password_request", "register_sms_request"]:
+            return RequestSMSCodeSerializer
+        
+        if self.action == "verify_sms_code":
+            return VerifySMSCodeSerializer
+            
+        if self.action == "reset_password_confirm":
+            return SetNewPasswordSerializer
+
+        # CRUD actions
         if self.action == "create":
             return CreateProfileSerializer
+        
         if self.action in ["update", "partial_update", "me"]:
             # GET on /profiles/me/
             if self.request.method == "GET":
                 return SimpleProfileSerializer
             return UpdateProfileSerializer
+        
         return SimpleProfileSerializer
 
-    @action(detail=False, methods=["get", "put", "patch", "delete"])
+    @action(detail=False, methods=["get", "put", "patch", "delete"], permission_classes=[IsAuthenticated])
     def me(self, request):
         user = request.user
         if request.method == "GET":
@@ -108,7 +105,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         """
         Registration Step 1: Verify number is unique, generate and send verification code.
         """
-        serializer = RequestSMSCodeSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         phone = serializer.validated_data["phone"]
@@ -133,7 +130,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         Step 2 (Shared): Validates code for either Register or Reset contexts.
         Returns a session_token string used as secure clearance.
         """
-        serializer = VerifySMSCodeSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         sms_record = serializer.validated_data["sms_record"]
@@ -155,7 +152,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         """
         Password Reset Step 1: Send reset code if client profile is matched.
         """
-        serializer = RequestSMSCodeSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         phone = serializer.validated_data["phone"]
@@ -182,7 +179,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         """
         3. If the token is authenticated, accept the submission to change the password.
         """
-        serializer = SetNewPasswordSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         user = serializer.validated_data["user"]

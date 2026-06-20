@@ -6,7 +6,7 @@ from api.serializers import BaseAddressSerializer, ClientSerializer
 from api.models import Address, Client
 from .models import SMSVerificationCode, User
 from rest_framework import serializers
-from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.serializerfields import PhoneNumberField
 
 class CreateProfileClientSerializer(serializers.ModelSerializer):
     address = BaseAddressSerializer(required=False, allow_null=True)
