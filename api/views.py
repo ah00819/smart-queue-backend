@@ -17,6 +17,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError, PermissionDenied
+from django.http import HttpResponse
+from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+import stripe
 
 # Create your views here.
 
@@ -39,6 +44,14 @@ class AppointmentViewSet(ModelViewSet):
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated, AppointmentPermissions]
     pagination_class = DefaultPagination
+
+    def get_serializer_class(self):
+        if self.action == "payment_intent":
+            from rest_framework import serializers
+            class EmptySerializer(serializers.Serializer): pass
+            return EmptySerializer
+
+        return self.serializer_class
 
     def get_queryset(self):
         user = self.request.user
@@ -69,6 +82,90 @@ class AppointmentViewSet(ModelViewSet):
                     "Only users with a Client profile can book appointments."
                 )
 
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def payment_intent(self, request, pk=None):
+        """
+        Generates a Stripe Payment Intent for a specific scheduled appointment.
+        """
+        appointment = self.get_object()
+
+        if appointment.paid:
+            return Response(
+                {"detail": "This appointment has already been paid for."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        amount_to_pay = appointment.amount_to_pay or appointment.counter.service.price
+
+        if not amount_to_pay or amount_to_pay <= 0:
+            return Response(
+                {"detail": "This appointment does not require a payment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            
+            # Stripe requires integers in the smallest currency unit (e.g., Cents/Piastres)
+            amount_in_cents = int(amount_to_pay * 100)
+
+            intent = stripe.PaymentIntent.create(
+                amount=amount_in_cents,
+                currency="egp",  # usd, egp, ..etc
+                metadata={
+                    "appointment_id": appointment.id,
+                    "client_id": appointment.client.id if appointment.client else None
+                },
+                automatic_payment_methods={"enabled": True},
+            )
+
+            return Response({
+                "client_secret": intent.client_secret,
+                "stripe_payment_id": intent.id,
+                "amount": amount_to_pay
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"detail": f"Stripe interaction failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    event = None
+
+    try:
+        # Verify the signature matches your Stripe Webhook Token
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        # Invalid payload execution
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        # Invalid payload signature signature validation failed
+        return HttpResponse(status=400)
+
+    # Handle the successful payment intent target
+    if event['type'] == 'payment_intent.succeeded':
+        intent = event['data']['object']
+        appointment_id = intent['metadata'].get('appointment_id')
+
+        if appointment_id:
+            try:
+                appointment = Appointment.objects.get(id=appointment_id)
+                if not appointment.paid:
+                    appointment.paid = True
+                    appointment.save()
+                    # optional: maybe add any email notifications
+            except Appointment.DoesNotExist:
+                pass 
+
+    return HttpResponse(status=200)
 
 class StaffMemberViewSet(ReadWriteSerializerMixin, ModelViewSet):
     read_serializer = StaffMemberSerializer

@@ -20,6 +20,7 @@ google-generativeai = "*"
 pillow = "*"
 apscheduler = "*"
 django-environ = "*"
+stripe = "*"
 
 [dev-packages]
 pylint-django = "*"

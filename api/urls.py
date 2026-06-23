@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_nested import routers
 from . import views
-from .views import NotificationListView
+from .views import NotificationListView, stripe_webhook
 
 router = routers.DefaultRouter()
 router.register("clients", views.ClientViewSet, basename="clients")
@@ -60,6 +60,7 @@ appointment_router.register(
 
 urlpatterns = [
     path("notifications/", NotificationListView.as_view(), name="notifications"),
+    path("stripe-webhook/", stripe_webhook, name="stripe-webhook"),
 ]
 
 urlpatterns += (
