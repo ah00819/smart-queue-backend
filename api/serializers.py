@@ -462,6 +462,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "date",
             "start_time",
             "end_time",
+            "slot_number",
             "want_reminder",
             "additional_info",
             "reschedule_attempts",
@@ -472,7 +473,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "canceled",
             "missed",  # admin/staff member only
         ]
-        read_only_fields = ["client", "end_time", "reschedule_attempts"]
+        read_only_fields = ["client", "end_time", "reschedule_attempts", "slot_number"]
 
     def get_fields(self):
         fields = super().get_fields()
@@ -598,16 +599,20 @@ class AppointmentSerializer(serializers.ModelSerializer):
         # Validate dynamic slots from counter capacity
         available_slots = counter.get_available_slots(date)
         requested_start_str = start_time.strftime("%H:%M")
-        is_valid_slot = any(
-            slot["start"] == requested_start_str for slot in available_slots
+        
+        matching_slot = next(
+            (slot for slot in available_slots if slot["start"] == requested_start_str), 
+            None
         )
 
-        if not is_valid_slot:
+        if not matching_slot:
             raise serializers.ValidationError(
                 _(
                     "The selected time slot is not available for this service on this date."
                 )
             )
+        # Inject the validated slot number into attrs so it saves to the database
+        attrs["slot_number"] = matching_slot["number"]
 
         overlapping = (
             Appointment.objects.filter(counter=counter, date=date)

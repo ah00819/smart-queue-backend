@@ -387,6 +387,7 @@ class ServiceCounter(models.Model):
             counter=self, date=date
         ).values_list("start_time", "end_time")
 
+        slot_number = 1
         while current_time + service_duration <= end_work_time:
             slot_start = current_time.time()
             slot_end = (current_time + service_duration).time()
@@ -398,10 +399,12 @@ class ServiceCounter(models.Model):
             if not is_busy:
                 slots.append(
                     {
+                        "number": slot_number,
                         "start": slot_start.strftime("%H:%M"),
                         "end": slot_end.strftime("%H:%M"),
                     }
                 )
+                slot_number += 1
             current_time += service_duration
 
         return slots
@@ -449,6 +452,11 @@ class Appointment(models.Model):
     end_time = models.TimeField(
         verbose_name=_("End Time"),
         help_text=_("The end time of the appointment request."),
+    )
+    slot_number = models.PositiveIntegerField(
+        verbose_name=_("Slot Number"), 
+        null=True, 
+        blank=True
     )
     # -----------------
     counter = models.ForeignKey(
