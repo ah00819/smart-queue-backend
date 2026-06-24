@@ -466,6 +466,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "additional_info",
             "reschedule_attempts",
             "paid",
+            "payment_method",
             "amount_to_pay",
             "attached_documents",
             "canceled",
@@ -477,10 +478,11 @@ class AppointmentSerializer(serializers.ModelSerializer):
         fields = super().get_fields()
         request = self.context.get("request")
 
-        # If user is NOT staff, they cannot change 'missed', 'paid', or 'amount_to_pay'
+        # If user is NOT staff, they cannot change 'missed', 'paid', 'payment_method' or 'amount_to_pay'
         if request and not request.user.is_staff:
             fields["missed"].read_only = True
             fields["paid"].read_only = True
+            fields["payment_method"].read_only = True
             fields["amount_to_pay"].read_only = True
 
         return fields

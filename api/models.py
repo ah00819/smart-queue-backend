@@ -481,6 +481,13 @@ class Appointment(models.Model):
             "Any additional information the client wants to provide for the appointment."
         ),
     )
+
+    class PaymentMethod(models.TextChoices):
+        CASH = "CASH", _("Cash")
+        CREDIT = "CREDIT", _("Credit Card")
+        DEBIT = "DEBIT", _("Debit Card")
+        ONLINE = "ONLINE", _("Online Payment")
+
     paid = models.BooleanField(
         default=False,
         verbose_name=_("Paid"),
@@ -497,6 +504,15 @@ class Appointment(models.Model):
             "If 0, it means the appointment is free or already paid."
         ),
     )
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        blank=True,
+        null=True,
+        verbose_name=_("Payment Method"),
+        help_text=_("The method used to pay for the appointment."),
+    )
+
     canceled = models.BooleanField(default=False, verbose_name=_("Canceled"))
     # this is used to add penalties on the client later
     missed = models.BooleanField(

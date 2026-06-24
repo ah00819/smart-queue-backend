@@ -160,6 +160,7 @@ def stripe_webhook(request):
                 appointment = Appointment.objects.get(id=appointment_id)
                 if not appointment.paid:
                     appointment.paid = True
+                    appointment.payment_method = Appointment.PaymentMethod.ONLINE
                     appointment.save()
                     # optional: maybe add any email notifications
             except Appointment.DoesNotExist:
