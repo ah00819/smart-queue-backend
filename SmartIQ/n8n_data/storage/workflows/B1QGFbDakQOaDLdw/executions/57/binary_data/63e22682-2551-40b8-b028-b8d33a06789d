@@ -1,0 +1,4 @@
+Booking ID,User Phone,Department,Service Name,Queue Number,Timestamp,Status
+﻿Booking ID,User Phone,Department,Service Name,Queue Number,Timestamp,Status
+BK660406891,01012345678,السجل المدني,استخراج بطاقة,SC-954,2026-06-28T15:26:46.891Z,مؤكد﻿Booking ID,User Phone,Department,Service Name,Queue Number,Timestamp,Status
+BK660494849,01012345678,السجل المدني,استخراج شهادة ميلاد مميكنة,SC-109,2026-06-28T15:28:14.849Z,مؤكد

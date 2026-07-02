@@ -1,0 +1,3 @@
+Booking ID,User Phone,Department,Service Name,Queue Number,Timestamp,Status
+﻿Booking ID,User Phone,Department,Service Name,Queue Number,Timestamp,Status,,,,,,,
+,,,,,,,BK662759404,01012345678,السجل المدني,استخراج شهادة ميلاد مميكنة,SC-606,2026-06-28T16:05:59.404Z,مؤكد

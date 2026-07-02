@@ -1,0 +1,23 @@
+services:
+
+  n8n:
+
+    image: n8nio/n8n:latest
+
+    container_name: smartiq-n8n
+
+    restart: unless-stopped
+
+    ports:
+      - "5678:5678"
+
+    environment:
+      - TZ=Africa/Cairo
+      - N8N_RESTRICT_FILE_ACCESS_TO=/documents;/uploads;/logs;/database
+
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+      - ./documents:/documents
+      - ./uploads:/uploads
+      - ./logs:/logs
+      - ./database:/database

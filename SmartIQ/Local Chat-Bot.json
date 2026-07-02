@@ -1,0 +1,1977 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smartiq",
+        "authentication": "jwtAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        736
+      ],
+      "id": "7e49f46e-5ea6-464d-90c4-d0cbe97b0dde",
+      "name": "🚪 ENTRY — Webhook Receiver",
+      "notesInFlow": true,
+      "webhookId": "e628184e-97ce-4826-8e7c-e2928dc256ff",
+      "credentials": {
+        "jwtAuth": {
+          "id": "cY56WErsO1pEgR5g",
+          "name": "JWT Auth account"
+        }
+      },
+      "notes": "═══════════════════════════════════\n ENTRY POINT — All chatbot requests land here\n───────────────────────────────────\n Expected POST body:\n {\n   \"action\": \"START\" | \"INQUIRY_START\" | ...\n   \"userPhone\": \"010xxxxxxxx\"\n   \"department\": \"السجل المدني\"\n   \"service\": \"استخراج بطاقة\"\n }\n No authentication required for graduation demo.\n═══════════════════════════════════"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "START",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7f23000e-fb95-4b82-a770-ca7456705cf0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "MAIN_MENU"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "MENU",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "52eed06c-c0a5-4c73-96c4-88f839aea8c1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "MAIN_MENU"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "RESTART",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d61c8348-69f9-4768-8f22-18fb94bac5a5"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "MAIN_MENU"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "INQUIRY_START",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "41659ab6-a4e5-459a-8bd8-24f7a5de7c9a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "INQUIRY_DEPT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "INQUIRY_SELECT_DEPT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ccf63f80-9ca8-4296-8095-a2c67e2d387a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "INQUIRY_SERVICES"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "INQUIRY_SERVICE_DETAIL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d21a96b3-cbfa-4e4f-af96-0dee38c6f8e1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SERVICE_DETAIL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "BOOK_START",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "282e94c4-771c-4ad0-b8fc-8dcc6e483fcc"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "BOOK_DEPT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "BOOK_SELECT_DEPT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "6ea85071-0abf-4dba-8db5-f72855f0ee13"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "BOOK_SERVICES"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b972c904-a114-4ed3-b3f8-9780f747d519",
+                    "leftValue": "BOOK_SELECT_BRANCH",
+                    "rightValue": "={{ $json.action }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "BOOK_SELECT_BRANCH"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "46fa6db0-cc50-471e-b5d1-39f689e49f53",
+                    "leftValue": "BOOK_SELECT_DATE",
+                    "rightValue": "={{ $json.action }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "BOOK_SELECT_DATE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ed35f204-48a1-47d8-a0b1-b8ee83d593af",
+                    "leftValue": "={{$json.action}}",
+                    "rightValue": "BOOK_SELECT_TIME",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "BOOK_SELECT_TIME"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a74e993-ab92-4e47-85d3-e9a4f80d4db3",
+                    "leftValue": "={{$json.action}}",
+                    "rightValue": "BOOK_CHANGE_BRANCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "BOOK_CHANGE_BRANCH"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "BOOK_CONFIRM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1048121e-d0e0-4e4c-960c-2ce6bdebd251"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "BOOK_SAVE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b0c36184-ce8c-4af5-865d-ca59d8c5ac4f",
+                    "leftValue": "MY_BOOKINGS",
+                    "rightValue": "={{ $json.action }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "MY_BOOKINGS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "WORK_HOURS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "63b822d0-3222-4c75-ad73-dcc77999ca98"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "WORK_HOURS"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "FALLBACK"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        928,
+        592
+      ],
+      "id": "fc992729-7d94-47fc-b342-64ce63887e5c",
+      "name": "🔀 ROUTER — Main Action Switch",
+      "notesInFlow": true,
+      "notes": "═══════════════════════════════════\n CENTRAL ROUTER\n Routes action string → correct flow branch\n───────────────────────────────────\n Outputs (in order):\n [0] MAIN_MENU\n [1] MAIN_MENU (MENU)\n [2] MAIN_MENU (RESTART)\n [3] INQUIRY_DEPT\n [4] INQUIRY_SERVICES\n [5] SERVICE_DETAIL\n [6] BOOK_DEPT\n [7] BOOK_SERVICES\n [8] BOOK_SAVE\n [9] WORK_HOURS\n [10] FALLBACK\n═══════════════════════════════════"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "responseType",
+              "value": "MAIN_MENU",
+              "type": "string"
+            },
+            {
+              "id": "m2",
+              "name": "message",
+              "value": "🏛️ أهلاً بك في SmarityQ\nنظام الطوابير الحكومي الذكي\n━━━━━━━━━━━━━━━━━━━━━━━━━━\nاختر من القائمة:",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "buttons",
+              "value": "=[{\"label\":\"📋 الاستفسار عن جهة حكومية\",\"action\":\"INQUIRY_START\"},{\"label\":\"🎫 حجز دور\",\"action\":\"BOOK_START\"},{\"label\":\"⏰ مواعيد العمل\",\"action\":\"WORK_HOURS\"},{\"label\":\"🔄 إعادة تشغيل\",\"action\":\"RESTART\"}]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        -48
+      ],
+      "id": "6507e213-7d2d-4da2-9fbf-950e74020122",
+      "name": "📋 VIEW — Main Menu",
+      "notesInFlow": true,
+      "notes": "Static main menu — 6 options.\nNo data needed, no sheets lookup."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════\n// INQUIRY — Build Dynamic Service List (API Version)\n// ═══════════════════════════════════════════════\n\nconst organizationId = Number(\n  $('⚙️ INIT — Normalize & Extract Request')\n    .first()\n    .json\n    .organizationId\n);\n\nconst organizations = $json.results || [];\n\nconst organization = organizations.find(\n  org => org.id === organizationId\n);\n\nif (!organization) {\n  return [{\n    json: {\n      responseType: 'NO_SERVICES',\n      message: '⚠️ لم يتم العثور على الجهة.',\n      buttons: [\n        { label: '🔙 رجوع للجهات', action: 'INQUIRY_START' },\n        { label: '🏠 القائمة الرئيسية', action: 'MENU' }\n      ]\n    }\n  }];\n}\n\nconst services = organization.services || [];\n\nif (services.length === 0) {\n  return [{\n    json: {\n      responseType: 'NO_SERVICES',\n      message: `⚠️ لا توجد خدمات متاحة حالياً لـ\\n\"${organization.name}\"`,\n      buttons: [\n        { label: '🔙 رجوع للجهات', action: 'INQUIRY_START' },\n        { label: '🏠 القائمة الرئيسية', action: 'MENU' }\n      ]\n    }\n  }];\n}\n\nconst serviceButtons = services.map(service => ({\n\n    label: service.name,\n\n    action:\"INQUIRY_SERVICE_DETAIL\",\n\n    serviceId: service.id,\n\n    organizationId: organization.id,\n\n    organizationName: organization.name\n\n}));\n\nserviceButtons.push({\n  label: '🔙 رجوع للجهات',\n  action: 'INQUIRY_START'\n});\n\nserviceButtons.push({\n  label: '🏠 القائمة الرئيسية',\n  action: 'MENU'\n});\n\nreturn [{\n  json: {\n    responseType: 'SERVICE_LIST',\n\n    message: `📋 خدمات ${organization.name}\n━━━━━━━━━━━━━━━━━━━━━━━━━━\nاختر الخدمة لعرض التفاصيل:`,\n\n    buttons: serviceButtons,\n\n    organizationId: organization.id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        352
+      ],
+      "id": "24fe440d-6e35-496a-bc13-1e10a16c6877",
+      "name": "🔧 LOGIC — Build Dynamic Service List",
+      "notesInFlow": true,
+      "notes": "Converts Google Sheets rows into interactive button list.\nHandles empty results gracefully with fallback message."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════\n// INQUIRY — Format Service Detail Card (API)\n// ═══════════════════════════════════════════════\n\nconst service = $input.first().json;\n\nif (!service.id) {\n\n  return [{\n    json:{\n      responseType:\"NOT_FOUND\",\n\n      message:\"⚠️ لم يتم العثور على بيانات الخدمة.\",\n\n      buttons:[\n        {\n          label:\"🔙 رجوع\",\n          action:\"INQUIRY_START\"\n        },\n        {\n          label:\"🏠 القائمة الرئيسية\",\n          action:\"MENU\"\n        }\n      ]\n    }\n  }];\n\n}\n\n// Required Documents\nconst docs = service.required_documents || [];\n\nconst docsText =\ndocs.length\n? docs.map(doc => `• ${doc.name}`).join('\\n')\n: \"لا توجد مستندات مطلوبة\";\n\n// Duration\nconst duration =\nservice.duration\n? service.duration.substring(0,5)\n: \"-\";\n\n// Price\nconst price =\n`${service.price} ${service.currency}`;\n\n// Organization\nconst organizationId = service.organization;\nconst organizationName = service.organization_name;\n\n// Message\nconst message = `📄 تفاصيل الخدمة\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🏛️ الجهة: ${organizationName}\n\n📌 الخدمة:\n${service.name}\n\n📝 الوصف:\n${service.description}\n\n📋 المستندات المطلوبة:\n${docsText}\n\n⏳ المدة:\n${duration}\n\n💰 الرسوم:\n${price}`;\n\nreturn [{\n\njson:{\n\nresponseType:\"SERVICE_DETAIL\",\n\nmessage,\n\nserviceId:service.id,\n\norganizationId:organizationId,\n\nbuttons:[\n\n{\nlabel:\"🎫 احجز دور لهذه الخدمة\",\naction:\"BOOK_START\",\nserviceId:service.id,\norganizationId:organizationId\n},\n\n{\nlabel:\"🔙 رجوع للخدمات\",\naction:\"INQUIRY_SELECT_DEPT\",\norganizationId:organizationId\n},\n\n{\nlabel:\"🏠 القائمة الرئيسية\",\naction:\"MENU\"\n}\n\n]\n\n}\n\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        560
+      ],
+      "id": "f2ce7f3f-679b-4347-9499-6ba0590a5701",
+      "name": "🔧 LOGIC — Format Service Detail Card",
+      "notesInFlow": true,
+      "notes": "Formats Required Papers, Fees, Notes into a readable Arabic card.\nHandles missing fields with safe fallbacks."
+    },
+    {
+      "parameters": {
+        "jsCode": "const booking = $('🌐 API — Create Appointment').first().json;\nconst branch = $('🌐 API — Get Branch Details').first().json;\n\nreturn {\n  responseType: \"BOOKING_SUCCESS\",\n\n  message:\n`🎉 تم تأكيد حجزك بنجاح\n\nتم تسجيل موعدك بنجاح، ويسعدنا خدمتك. ✅\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n📍 الفرع\n${branch.name}\n\n🛎 الخدمة\n${booking.counter.service.name}\n\n📅 التاريخ\n${booking.date}\n\n🕒 الموعد\n${booking.start_time.substring(0,5)}\n\n💰 الرسوم\n${booking.amount_to_pay ?? booking.counter.service.price} ${booking.counter.service.currency}\n\n🆔 رقم الحجز\n#${booking.id}\n\n━━━━━━━━━━━━━━━━━━━━━━\n\n⏳ يرجى الحضور قبل الموعد بـ 10 دقائق.\n\n📄 تأكد من إحضار أي مستندات مطلوبة لإتمام الخدمة.\n\n💚 شكرًا لاستخدام SmartIQ Assistant.\nنتمنى لك يومًا سعيدًا.`,\n\n  buttons: [\n    {\n      label: \"📄 حجوزاتي\",\n      action: \"MY_BOOKINGS\"\n    },\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ]\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        2160
+      ],
+      "id": "2ff83103-65a6-4293-81be-d45e7b80f5f8",
+      "name": "🎉 VIEW — Booking Success Card",
+      "notesInFlow": true,
+      "notes": "Formats the booking confirmation shown to the user.\nIncludes: queue number, booking ID, department, service, timestamp."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wh1",
+              "name": "responseType",
+              "value": "WORK_HOURS",
+              "type": "string"
+            },
+            {
+              "id": "wh2",
+              "name": "message",
+              "value": "⏰ مواعيد العمل الرسمية\n═══════════════════════════\n🏛️ جميع الجهات الحكومية\n\n📅 الأيام    : الأحد — الخميس\n🕗 من        : 8:00 صباحاً\n🕙 حتى      : 3:00 مساءً\n\n🚫 إجازة    : الجمعة والسبت\n\n📍 ملاحظة: بعض الجهات قد\n   تختلف مواعيدها — يُرجى\n   التأكد قبل الذهاب",
+              "type": "string"
+            },
+            {
+              "id": "wh3",
+              "name": "buttons",
+              "value": "=[{\"label\":\"🎫 احجز دور الآن\",\"action\":\"BOOK_START\"},{\"label\":\"📋 الاستفسار عن خدمة\",\"action\":\"INQUIRY_START\"},{\"label\":\"🏠 القائمة الرئيسية\",\"action\":\"MENU\"}]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1376,
+        2784
+      ],
+      "id": "2071fdb0-ea66-4e62-8f16-393090411dd7",
+      "name": "⏰ VIEW — Work Hours Info",
+      "notesInFlow": true,
+      "notes": "Static government working hours information."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fb1",
+              "name": "responseType",
+              "value": "FALLBACK",
+              "type": "string"
+            },
+            {
+              "id": "fb2",
+              "name": "message",
+              "value": "⚠️ لم يتم التعرف على الطلب.\n\nيرجى استخدام الأزرار\nللتنقل في القائمة.",
+              "type": "string"
+            },
+            {
+              "id": "fb3",
+              "name": "buttons",
+              "value": "=[{\"label\":\"🏠 القائمة الرئيسية\",\"action\":\"MENU\"}]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1376,
+        2976
+      ],
+      "id": "f9505833-ab50-40c5-94ab-fc3f692a6ffc",
+      "name": "⚠️ VIEW — Fallback Handler",
+      "notesInFlow": true,
+      "notes": "Catches any unrecognized action and returns a safe fallback."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════\n// OUTPUT — Unified Response Aggregator\n// Normalizes all branch outputs into one format\n// ═══════════════════════════════════════════════\n\nconst data = $input.first().json;\n\nconst response = {\n  ok:           true,\n  responseType: data.responseType || 'UNKNOWN',\n  message:      data.message      || '',\n  buttons:      data.buttons      || [],\n    \n  serviceId: data.serviceId,\n  branchId: data.branchId,\n  organizationId: data.organizationId,\n  \n  timestamp:    new Date().toISOString()\n};\n\n// Include booking summary if present\nif (data.bookingId) {\n  response.booking = {\n    id:          data.bookingId,\n    queueNumber: data.queueNumber,\n    department:  data.department,\n    service:     data.serviceName\n  };\n}\n\nreturn [response];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        800
+      ],
+      "id": "f4cdcd1d-9aac-40f0-af42-b5a130873f40",
+      "name": "🔗 OUTPUT — Response Aggregator",
+      "notesInFlow": true,
+      "notes": "All branches converge here.\nBuilds one clean, consistent JSON response.\nAdds booking summary when applicable."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3152,
+        800
+      ],
+      "id": "ce16928e-76ef-451e-b7ba-25e5adc73b35",
+      "name": "📤 OUTPUT — Send HTTP Response",
+      "notesInFlow": true,
+      "notes": "Final node — sends JSON response back to the chatbot frontend.\nStatus 200, Content-Type: application/json"
+    },
+    {
+      "parameters": {
+        "jsCode": "const arabicNames = {\n  \"Egyptian Post\": \"🏤 البريد المصري\",\n  \"General Traffic Department\": \"🚗 الإدارة العامة للمرور\",\n  \"Civil Affairs Sector\": \"🪪 قطاع الأحوال المدنية\",\n  \"Passports & Immigration Department\": \"🛂 مصلحة الجوازات والهجرة\",\n  \"National Organization for Social Insurance\": \"🛡️ الهيئة القومية للتأمينات الاجتماعية\"\n};\n\nconst buttons = [];\n\nfor (const org of $json.results) {\n\n  if (!org.is_active) continue;\n\n  buttons.push({\n    label: arabicNames[org.name] ?? org.name,\n\n    action: \"INQUIRY_SELECT_DEPT\",\n\n    organizationId: org.id\n  });\n\n}\n\nbuttons.push({\n  label: \"🔙 رجوع\",\n  action: \"MENU\"\n});\n\nreturn [\n{\njson:{\nresponseType:\"DEPT_SELECTOR\",\n\nmessage:`🏢 اختر الجهة الحكومية\n━━━━━━━━━━━━━━━━━━━━━━━━━━\nستظهر لك الخدمات المتاحة بها:`,\n\nbuttons\n}\n}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        160
+      ],
+      "id": "f29c0580-9923-4f90-8661-b47d3538603c",
+      "name": "🔧 LOGIC — Format Organizations"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:8000/api/organizations/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1264,
+        160
+      ],
+      "id": "415e62aa-d64d-4d33-aa4a-255b72dcd09b",
+      "name": "🏢 VIEW — Inquiry: Choose Department1"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:8000/api/organizations/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1264,
+        352
+      ],
+      "id": "dff02cdc-9321-429c-af40-516872b9354e",
+      "name": "📊 DATA — Fetch Services by Department1"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/services/{{ $('⚙️ INIT — Normalize & Extract Request').first().json.serviceId }}/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1264,
+        560
+      ],
+      "id": "5f3dc2ff-4253-4775-8525-1caea3d6e49f",
+      "name": "🌐 API — Get Service Detail"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════\n// BOOKING — Format Organizations (API)\n// Builds booking department selector from API\n// ═══════════════════════════════════════════════\n\nconst arabicNames = {\n  \"Egyptian Post\": \"🏤 البريد المصري\",\n  \"General Traffic Department\": \"🚗 الإدارة العامة للمرور\",\n  \"Civil Affairs Sector\": \"🪪 قطاع الأحوال المدنية\",\n  \"Passports & Immigration Department\": \"🛂 مصلحة الجوازات والهجرة\",\n  \"National Organization for Social Insurance\": \"🛡️ الهيئة القومية للتأمينات الاجتماعية\"\n};\n\nconst buttons = [];\n\n// API returns:\n// {\n//   count,\n//   results: [...]\n// }\n\nfor (const org of ($json.results || [])) {\n\n  // Skip inactive organizations if the field exists\n  if (org.is_active === false) continue;\n\n  buttons.push({\n    label: arabicNames[org.name] ?? org.name,\n\n    action: \"BOOK_SELECT_DEPT\",\n\n    organizationId: org.id\n  });\n\n}\n\nbuttons.push({\n  label: \"🔙 رجوع\",\n  action: \"MENU\"\n});\n\nreturn [{\n  json: {\n    responseType: \"BOOK_DEPT_SELECT\",\n\n    message:\n`🎫 حجز دور — اختر الجهة\n━━━━━━━━━━━━━━━━━━━━━━━━━━\nستحصل على رقم دور فور الاختيار:`,\n\n    buttons\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        784
+      ],
+      "id": "b42c4c13-7e00-49d0-8d42-0838b6fc9c16",
+      "name": "🔧 LOGIC — Format Booking Organizations"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:8000/api/organizations/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1264,
+        784
+      ],
+      "id": "de5b28c1-d29d-4e38-b11f-50d01d36ebf1",
+      "name": "🏢 VIEW — Inquiry: Choose Department"
+    },
+    {
+      "parameters": {
+        "url": "={{'http://host.docker.internal:8000/api/organizations/' + $('⚙️ INIT — Normalize & Extract Request').first().json.organizationId + '/branches/'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{$json.headers[\"x-user-jwt\"]}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1264,
+        1168
+      ],
+      "id": "b87a6e86-cce5-4cd0-bc00-5cac4fc6b568",
+      "name": "🌐 API — Get Bookable Services"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/organizations/{{ $('⚙️ INIT — Normalize & Extract Request').first().json.organizationId }}/branches/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1264,
+        976
+      ],
+      "id": "250b51ac-002d-478c-9e32-e1caa5b4cb66",
+      "name": "🌐 API — Get Branches1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buttons = [];\n\nfor (const branch of ($json.results || [])) {\n\n  if (!branch.is_active) continue;\n\n  if (!branch.services || branch.services.length === 0) continue;\n\n  buttons.push({\n    label: branch.name,\n    action: \"BOOK_SELECT_BRANCH\",\n    branchId: branch.id,\n    organizationId: branch.organization\n  });\n\n}\n\nbuttons.push({\n  label: \"🔙 رجوع\",\n  action: \"BOOK_START\"\n});\n\nbuttons.push({\n  label: \"🏠 القائمة الرئيسية\",\n  action: \"MENU\"\n});\n\nreturn [{\n  json: {\n    responseType: \"BOOK_BRANCH_SELECT\",\n\n    message:\n`🏢 اختر الفرع\n━━━━━━━━━━━━━━━━━━━━━━━━━━`,\n\n    buttons\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        976
+      ],
+      "id": "d6d9425d-7e68-443f-b683-1d1f813687a1",
+      "name": "🔧 LOGIC — Format Branches"
+    },
+    {
+      "parameters": {
+        "jsCode": "const branchId = Number(\n  $('⚙️ INIT — Normalize & Extract Request')\n    .first()\n    .json\n    .branchId\n);\n\nconst branches = $json.results || [];\n\nconst branch = branches.find(b => b.id === branchId);\n\nif (!branch) {\n  return [{\n    responseType: 'NOT_FOUND',\n    message: '⚠️ لم يتم العثور على الفرع.',\n    buttons: [\n      {\n        label: '🔙 رجوع للفروع',\n        action: 'BOOK_SELECT_DEPT'\n      },\n      {\n        label: '🏠 القائمة الرئيسية',\n        action: 'MENU'\n      }\n    ]\n  }];\n}\n\nreturn [{\n  branch\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        1168
+      ],
+      "id": "a35d953d-aef9-4004-999b-ca4ae576b77f",
+      "name": "🔧 LOGIC — Find Selected Branch",
+      "notesInFlow": true,
+      "notes": "Maps available services into booking-step buttons."
+    },
+    {
+      "parameters": {
+        "jsCode": "const branch = $input.first().json.branch;\n\nconst buttons = branch.services.map(service => ({\n  label: service.name,\n  action: \"BOOK_SELECT_DATE\",\n  serviceId: service.id,\n  organizationId: branch.organization,\n  branchId: branch.id,\n  branchName: branch.name\n}));\n\nbuttons.push({\n  label: \"🔙 رجوع للفروع\",\n  action: \"BOOK_SELECT_DEPT\",\n  organizationId: branch.organization\n});\n\nbuttons.push({\n  label: \"🏠 القائمة الرئيسية\",\n  action: \"MENU\"\n});\n\nreturn [{\n  responseType: \"BOOK_SERVICE_SELECT\",\n\n  message:\n`📋 خدمات ${branch.name}\n━━━━━━━━━━━━━━━━━━━━━━━━━━\nاختر الخدمة:`,\n\n  buttons\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        1168
+      ],
+      "id": "2d7e469f-9823-4101-8ac0-5b0b4f272750",
+      "name": "🔧 LOGIC — Build Booking Services From Branch"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      responseType: \"INPUT_DATE\",\n      message: \"📅 اختر تاريخ الحجز\",\n      serviceId: $input.first().json.serviceId,\n      branchId: $input.first().json.branchId,\n      organizationId: $input.first().json.organizationId,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        1376
+      ],
+      "id": "911574eb-37c6-4536-8b52-b5f0b18830e3",
+      "name": "🔧 LOGIC — Ask Booking Date"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/branches/{{ $('⚙️ INIT — Normalize & Extract Request').first().json.branchId }}/service-counters/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('⚙️ INIT — Normalize & Extract Request').first().json.userJwt }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1312,
+        1568
+      ],
+      "id": "311b3ada-f8db-4c03-a8ca-052b141b6fe2",
+      "name": "🌐 API — Get Service Counters"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "52aeb9d5-5322-444c-abb7-f9de964f5396",
+              "leftValue": "={{$json.found}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1728,
+        1568
+      ],
+      "id": "e8ce3240-951e-48ad-bb99-72659f28e106",
+      "name": "❓ IF — Counter Found"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/organizations/{{ $('⚙️ INIT — Normalize & Extract Request').first().json.organizationId }}/branches/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1920,
+        1696
+      ],
+      "id": "1405a70d-fe4b-4e67-8cfb-ade8592278e0",
+      "name": "🌐 API — Get Branches"
+    },
+    {
+      "parameters": {
+        "jsCode": "const serviceId = Number(\n  $('⚙️ INIT — Normalize & Extract Request')\n    .first()\n    .json\n    .serviceId\n);\n\nconst counters = $json.results || [];\n\nconst counter = counters.find(c =>\n  c.is_operational &&\n  c.service &&\n  Number(c.service.id) === serviceId\n);\n\nif (!counter) {\n  return [\n    {\n      json: {\n        found: false\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      found: true,\n      counterId: counter.id,\n      counter,\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        1568
+      ],
+      "id": "4913bdb8-cafa-4b1e-b043-527173a03283",
+      "name": "🔧 BOOKING — Resolve Service Counter"
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = $('⚙️ INIT — Normalize & Extract Request')\n  .first()\n  .json;\n\n// بيانات الفرع\nconst branch = $('🔧 BOOKING — Resolve Selected Branch')\n  .first()\n  .json\n  .branch;\n\nconst branchName = branch.name;\n\n// بيانات الخدمة\nconst service = branch.services.find(\n  s => Number(s.id) === Number(request.serviceId)\n);\n\nconst serviceName = service?.name || \"الخدمة المطلوبة\";\n\nreturn [\n  {\n    json: {\n      responseType: \"BOOK_NO_COUNTER\",\n\n      message:\n`⚠️ خدمة \"${serviceName}\"\n\nغير متاحة للحجز حالياً فى:\n\n📍 ${branchName}\n\nيرجى اختيار فرع آخر يقدم نفس الخدمة.`,\n\n      buttons: [\n        {\n          label: \"🔙 اختيار فرع آخر\",\n          action: \"BOOK_CHANGE_BRANCH\",\n          organizationId: request.organizationId,\n          serviceId: request.serviceId,\n          branchId: request.branchId\n        },\n        {\n          label: \"🏠 القائمة الرئيسية\",\n          action: \"MENU\"\n        }\n      ]\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        1696
+      ],
+      "id": "869259da-72b0-4133-b030-491990dd41cf",
+      "name": "🔧 BOOKING — Handle Unavailable Service"
+    },
+    {
+      "parameters": {
+        "jsCode": "const branchId = Number(\n  $('⚙️ INIT — Normalize & Extract Request')\n    .first()\n    .json\n    .branchId\n);\n\nconst branches = $json.results || [];\n\nconst branch = branches.find(b => b.id === branchId);\n\nif (!branch) {\n  return [{\n    responseType: 'NOT_FOUND',\n    message: '⚠️ لم يتم العثور على الفرع.',\n    buttons: [\n      {\n        label: '🔙 رجوع للفروع',\n        action: 'BOOK_SELECT_DEPT'\n      },\n      {\n        label: '🏠 القائمة الرئيسية',\n        action: 'MENU'\n      }\n    ]\n  }];\n}\n\nreturn [{\n  branch\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        1696
+      ],
+      "id": "28808fae-253f-4fa8-aefe-54a3aa111c84",
+      "name": "🔧 BOOKING — Resolve Selected Branch",
+      "notesInFlow": true,
+      "notes": "Maps available services into booking-step buttons."
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/organizations/{{ $('⚙️ INIT — Normalize & Extract Request').first().json.organizationId }}/branches/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1280,
+        1952
+      ],
+      "id": "c42e4d55-13f6-4535-b375-b563302a5c1b",
+      "name": "🌐 API — Get Branches (Alternative)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = $('⚙️ INIT — Normalize & Extract Request')\n  .first().json;\n\nconst currentBranchId = Number(request.branchId);\n\nconst branches = $json.results || [];\n\n// استبعد الفرع الحالي\nconst filteredBranches = branches.filter(\n  branch => Number(branch.id) !== currentBranchId\n);\n\n// رجع كل فرع كـ Item مستقل\nreturn filteredBranches.map(branch => ({\n  json: {\n    branchId: branch.id,\n    branchName: branch.name,\n    branch,\n    serviceId: Number(request.serviceId),\n    organizationId: Number(request.organizationId),\n    currentBranchId,\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        1952
+      ],
+      "id": "5fb0ed22-5ffb-4643-a581-29c04977e640",
+      "name": "🔧 BOOKING — Find Alternative Branches"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/branches/{{ $json.branchId }}/service-counters/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('⚙️ INIT — Normalize & Extract Request').first().json.userJwt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1728,
+        1952
+      ],
+      "id": "029450fb-6f08-4e73-94bf-052eefa1a84c",
+      "name": "🌐 API — Get Branch Service Counters",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const counters = $json.results || [];\n\nconst serviceId = Number(\n  $('⚙️ INIT — Normalize & Extract Request')\n    .first()\n    .json\n    .serviceId\n);\n\nconst counter = counters.find(c =>\n  Number(c.service.id) === serviceId &&\n  c.is_operational === true\n);\nconst branchInfo = $('🔧 BOOKING — Find Alternative Branches')\n  .all()\n  .find(\n    item => Number(item.json.branchId) === Number(counter?.branch)\n  )?.json;\nif (!counter) {\n  return {\n    valid: false\n  };\n}\n\nreturn {\n  valid: true,\n  branchId: counter.branch,\n  branchName: branchInfo.branchName,\n  organizationId: branchInfo.organizationId,\n  serviceId: branchInfo.serviceId,\n  counterId: counter.id\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        1952
+      ],
+      "id": "d92674b3-d4fb-46c1-a312-699aedf93950",
+      "name": "🔧 BOOKING — Extract Valid Branch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aba6b19a-7ed6-4c7d-bcec-a81a46891497",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2160,
+        1952
+      ],
+      "id": "de17ba8a-88bd-4067-a437-175228437326",
+      "name": "🔀 IF — Valid Branch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buttons = [];\n\nfor (const item of $input.all()) {\n\n  buttons.push({\n    label: `📍 ${item.json.branchName}`,\n    action: \"BOOK_SELECT_DATE\",\n    branchId: item.json.branchId,\n    serviceId: item.json.serviceId,\n    organizationId: item.json.organizationId,\n  });\n\n}\n\nreturn {\n  responseType: \"BOOK_CHANGE_BRANCH\",\n\n  message:\n`⚠️ الخدمة غير متاحة للحجز في الفرع الذي اخترته حالياً.\n\nيمكنك اختيار أحد الفروع التالية لإكمال الحجز:`,\n\n  buttons\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        1840
+      ],
+      "id": "eafcbf6b-7563-4879-b478-ba032ffbd85d",
+      "name": "🔧 BOOKING — Build Alternative Buttons"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/branches/{{ $('⚙️ INIT — Normalize & Extract Request').first().json.branchId }}/service-counters/{{ $json.counterId }}/available_slots/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "date",
+              "value": "={{ $('⚙️ INIT — Normalize & Extract Request').first().json.date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2000,
+        1424
+      ],
+      "id": "d6594c5a-6a7c-47a9-b613-1d6a9fa912f2",
+      "name": "🌐 API — Get Available Slots",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "action",
+              "value": "={{ ($json.body.action || 'START').toUpperCase().trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "userPhone",
+              "value": "={{ $json.body.userPhone || $json.body.user_phone || '00000000000' }}",
+              "type": "string"
+            },
+            {
+              "id": "fc7b2340-8d63-4230-abdf-8a186c5f23e1",
+              "name": "organizationId",
+              "value": "={{ $json.body.organizationId || $json.body.payload?.organizationId || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "department",
+              "value": "={{ $json.body.department || $json.body.payload?.department || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "9867a0f1-e6db-4833-9faa-f574dee39a88",
+              "name": "serviceId",
+              "value": "={{ $json.body.serviceId || $json.body.payload?.serviceId || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "0f94ebb1-6019-440e-8539-8af5c7365e4f",
+              "name": "branchId",
+              "value": "={{ $json.body.branchId || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ea93a2fd-ef2c-446a-8b1a-1a0bbb70db78",
+              "name": "counterId",
+              "value": "={{ $json.body.counterId || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "7587ac5c-ffe6-4816-a2b2-2d0e98e950f5",
+              "name": "date",
+              "value": "={{ $json.body.date || $json.body.payload?.date || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "7fc192e5-2ceb-4e3e-8168-4b73f1a9b5bd",
+              "name": "time",
+              "value": "={{ $json.body.time || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "service",
+              "value": "={{ $json.body.service || $json.body.payload?.service || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "03134ec2-28b0-43e7-9c46-ed21654a19b1",
+              "name": "branchName",
+              "value": "={{ $json.body.branchName || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "requestTime",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "0d50df6e-0522-4bcf-ae10-2e9dfac91623",
+              "name": "userJwt",
+              "value": "={{ $json.headers[\"x-user-jwt\"] || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        736
+      ],
+      "id": "7acc00c9-6b75-477f-8427-26d6f72e5759",
+      "name": "⚙️ INIT — Normalize & Extract Request",
+      "notesInFlow": true,
+      "notes": "Extracts all needed fields from the webhook body.\nSets safe defaults. No session logic needed.\nOutputs: action, userPhone, department, service, requestTime"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst counterData = $('❓ IF — Counter Found').first().json;\n\nconst requestData = $('⚙️ INIT — Normalize & Extract Request').first().json;\n\nconst buttons = (data.slots || []).map(slot => ({\n  label: `🕒 ${slot.start}`,\n  action: \"BOOK_CONFIRM\",\n\n  date: data.date,\n  time: slot.start,\n\n  counterId: counterData.counterId,\n  branchId: requestData.branchId,\n  branchName: requestData.branchName,\n  serviceId: requestData.serviceId,\n  organizationId: requestData.organizationId\n}));\n\nreturn {\n  responseType: \"BOOK_SELECT_TIME\",\n  message: \"🕒 اختر وقت الحجز:\",\n  buttons\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        1424
+      ],
+      "id": "66f5daf0-82bd-46a1-8172-8fb324828e3f",
+      "name": "🔧 BOOKING — Build Time Buttons"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/appointments/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('⚙️ INIT — Normalize & Extract Request').first().json.userJwt }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"counter_id\": {{ $json.counterId }},\n  \"date\": \"{{ $json.date }}\",\n  \"start_time\": \"{{ $json.time }}\",\n  \"payment_method\": \"\",\n  \"want_reminder\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1360,
+        2256
+      ],
+      "id": "0407cb81-e813-47bc-b282-3db24322c6fc",
+      "name": "🌐 API — Create Appointment"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/branches/{{ $('⚙️ INIT — Normalize & Extract Request').first().json.branchId }}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('⚙️ INIT — Normalize & Extract Request').first().json.userJwt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1808,
+        2160
+      ],
+      "id": "284b6400-a319-4009-b6d3-1b8b7a2d6906",
+      "name": "🌐 API — Get Branch Details"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "213504ec-10ed-4340-ac17-e86ae3c6e5c7",
+              "leftValue": "={{ $json.id !== undefined }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1536,
+        2256
+      ],
+      "id": "42aa172c-1dfb-4621-b6ab-0136af78765d",
+      "name": "❓ IF — Booking Created"
+    },
+    {
+      "parameters": {
+        "jsCode": "const request =\n  $('⚙️ INIT — Normalize & Extract Request').first().json;\nconst error =\n  $json.non_field_errors?.[0] ||\n  $json.detail ||\n  \"\";\n\nlet response = {\n  responseType: \"BOOKING_ERROR\",\n  message: \"❌ حدث خطأ أثناء إتمام الحجز.\\nيرجى المحاولة مرة أخرى.\",\n  buttons: [\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ]\n};\n\nif (error === \"You already have a pending appointment for this counter.\") {\n\n  response.responseType = \"BOOKING_ALREADY_EXISTS\";\n\n  response.message =\n`📌 لديك حجز قائم بالفعل لهذه الخدمة.\n\nلا يمكنك إنشاء حجز جديد قبل انتهاء أو إلغاء الحجز الحالي.\n\nيمكنك متابعة حالة الحجز من خلال \"حجوزاتي\".`;\n\n  response.buttons = [\n    {\n      label: \"📄 حجوزاتي\",\n      action: \"MY_BOOKINGS\"\n    },\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ];\n\n}\n\nelse if (error === \"This slot was just booked.\") {\n\n  response.responseType = \"BOOKING_SLOT_TAKEN\";\n\n  response.message =\n`⏳ للأسف تم حجز هذا الموعد بواسطة مستخدم آخر منذ لحظات.\n\nيرجى اختيار موعد آخر.`;\n\n  response.buttons = [\n    {\n      label: \"🕒 اختيار وقت آخر\",\n      action: \"BOOK_SELECT_TIME\",\n\n      branchId: request.branchId,\n      counterId: request.counterId,\n      serviceId: request.serviceId,\n      organizationId: request.organizationId,\n      date: request.date\n    },\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ];\n\n}\n\nelse if (error === \"This counter is currently unavailable.\") {\n\n  response.responseType = \"COUNTER_UNAVAILABLE\";\n\n  response.message =\n`⚠️ هذا الشباك غير متاح حالياً.\n\n  يرجى اختيار فرع آخر لإكمال الحجز.`;\n\n  response.buttons = [\n    {\n      label: \"📍 اختيار فرع آخر\",\n      action: \"BOOK_CHANGE_BRANCH\",\n\n      branchId: request.branchId,\n      counterId: request.counterId,\n      serviceId: request.serviceId,\n      organizationId: request.organizationId,\n      date: request.date\n    },\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ];\n\n}\n\nelse if (error === \"You have another appointment scheduled during this time frame.\") {\n\n  response.responseType = \"TIME_CONFLICT\";\n\n  response.message =\n`📅 لديك موعد آخر في نفس التوقيت.\n\nيرجى اختيار وقت مختلف.`;\n\n  response.buttons = [\n    {\n      label: \"🕒 اختيار وقت آخر\",\n      action: \"BOOK_SELECT_TIME\",\n\n      branchId: request.branchId,\n      counterId: request.counterId,\n      serviceId: request.serviceId,\n      organizationId: request.organizationId,\n      date: request.date\n    },\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ];\n\n}\n\nelse if (error === \"The selected time slot is not available for this service on this date.\") {\n\n  response.responseType = \"INVALID_SLOT\";\n\n  response.message =\n`⚠️ الموعد الذي اخترته لم يعد متاحاً.\n\nيرجى اختيار موعد آخر.`;\n\n  response.buttons = [\n    {\n      label: \"🕒 اختيار وقت آخر\",\n      action: \"BOOK_SELECT_TIME\",\n      \n      branchId: request.branchId,\n      counterId: request.counterId,\n      serviceId: request.serviceId,\n      organizationId: request.organizationId,\n      date: request.date\n    },\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ];\n\n}\n\nelse if (error === \"User does not have a client profile.\") {\n\n  response.responseType = \"CLIENT_PROFILE_REQUIRED\";\n\n  response.message =\n  `⚠️ لا يمكن إتمام الحجز لأن حسابك غير مكتمل.\n\nيرجى إكمال بيانات حسابك أولاً.`;\n\n  response.buttons = [\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ];\n\n}\n\nelse if ($json.detail === \"Authentication credentials were not provided.\") {\n\n  response.responseType = \"AUTH_REQUIRED\";\n\n  response.message =\n`🔒 انتهت صلاحية جلسة تسجيل الدخول.\n\nيرجى تسجيل الدخول مرة أخرى.`;\n\n  response.buttons = [\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ];\n\n}\n\nreturn response;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1888,
+        2352
+      ],
+      "id": "1abe9133-8164-4079-81fd-c3ba2692f216",
+      "name": "🔧 BOOKING — Handle Create Error",
+      "notesInFlow": true,
+      "notes": "Formats the booking confirmation shown to the user.\nIncludes: queue number, booking ID, department, service, timestamp."
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/appointments/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('⚙️ INIT — Normalize & Extract Request').first().json.userJwt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1360,
+        2496
+      ],
+      "id": "27ccf128-09ca-4f26-be52-249489f8bd6c",
+      "name": "🌐 API — Get My Appointments"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst bookings = data.results || [];\n\nif (bookings.length === 0) {\n  return {\n    responseType: \"MY_BOOKINGS\",\n\n    message:\n`📭 لا توجد لديك أي حجوزات حالياً.`,\n\n    buttons: [\n      {\n        label: \"🏠 القائمة الرئيسية\",\n        action: \"MENU\"\n      }\n    ]\n  };\n}\n\nlet message = \"📋 حجوزاتك الحالية\\n\\n\";\n\nfor (const booking of bookings) {\n\n  message +=\n`🆔 #${booking.id}\n\n🛎 ${booking.counter.service.name}\n📅 ${booking.date}\n🕒 ${booking.start_time.substring(0,5)}\n\n──────────────\n\n`;\n\n}\n\nreturn {\n\n  responseType: \"MY_BOOKINGS\",\n\n  message,\n\n  buttons: [\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ]\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        2496
+      ],
+      "id": "7ea82646-fdc1-42e1-af45-4287b98391e5",
+      "name": "📄 VIEW — My Bookings",
+      "notesInFlow": true,
+      "notes": "Formats the booking confirmation shown to the user.\nIncludes: queue number, booking ID, department, service, timestamp."
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  responseType: \"NO_AVAILABLE_BRANCH\",\n\n  message:\n`😔 عذرًا\n\nلا يوجد حالياً أي فرع يقدم هذه الخدمة للحجز.\n\nقد يكون السبب:\n• جميع الشبابيك غير متاحة.\n• الخدمة متوقفة مؤقتاً.\n\nيرجى المحاولة مرة أخرى لاحقاً أو اختيار خدمة أخرى.`,\n\n  buttons: [\n    {\n      label: \"🔙 اختيار خدمة أخرى\",\n      action: \"BOOK_START\"\n    },\n    {\n      label: \"🏠 القائمة الرئيسية\",\n      action: \"MENU\"\n    }\n  ]\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        2016
+      ],
+      "id": "789e90e9-ac90-43bf-ae24-ad15ab8d3d46",
+      "name": "🔧 BOOKING — No Alternative Branches"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "🚪 ENTRY — Webhook Receiver": {
+      "main": [
+        [
+          {
+            "node": "⚙️ INIT — Normalize & Extract Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 ROUTER — Main Action Switch": {
+      "main": [
+        [
+          {
+            "node": "📋 VIEW — Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📋 VIEW — Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📋 VIEW — Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🏢 VIEW — Inquiry: Choose Department1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📊 DATA — Fetch Services by Department1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🌐 API — Get Service Detail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🏢 VIEW — Inquiry: Choose Department",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🌐 API — Get Branches1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🌐 API — Get Bookable Services",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🔧 LOGIC — Ask Booking Date",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🌐 API — Get Service Counters",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🌐 API — Get Branches (Alternative)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🌐 API — Create Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🌐 API — Get My Appointments",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⏰ VIEW — Work Hours Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⚠️ VIEW — Fallback Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📋 VIEW — Main Menu": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 LOGIC — Build Dynamic Service List": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 LOGIC — Format Service Detail Card": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎉 VIEW — Booking Success Card": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏰ VIEW — Work Hours Info": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ VIEW — Fallback Handler": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔗 OUTPUT — Response Aggregator": {
+      "main": [
+        [
+          {
+            "node": "📤 OUTPUT — Send HTTP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 LOGIC — Format Organizations": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🏢 VIEW — Inquiry: Choose Department1": {
+      "main": [
+        [
+          {
+            "node": "🔧 LOGIC — Format Organizations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 DATA — Fetch Services by Department1": {
+      "main": [
+        [
+          {
+            "node": "🔧 LOGIC — Build Dynamic Service List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Service Detail": {
+      "main": [
+        [
+          {
+            "node": "🔧 LOGIC — Format Service Detail Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🏢 VIEW — Inquiry: Choose Department": {
+      "main": [
+        [
+          {
+            "node": "🔧 LOGIC — Format Booking Organizations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 LOGIC — Format Booking Organizations": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Bookable Services": {
+      "main": [
+        [
+          {
+            "node": "🔧 LOGIC — Find Selected Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Branches1": {
+      "main": [
+        [
+          {
+            "node": "🔧 LOGIC — Format Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 LOGIC — Format Branches": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 LOGIC — Find Selected Branch": {
+      "main": [
+        [
+          {
+            "node": "🔧 LOGIC — Build Booking Services From Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 LOGIC — Build Booking Services From Branch": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 LOGIC — Ask Booking Date": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Service Counters": {
+      "main": [
+        [
+          {
+            "node": "🔧 BOOKING — Resolve Service Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ IF — Counter Found": {
+      "main": [
+        [
+          {
+            "node": "🌐 API — Get Available Slots",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🌐 API — Get Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Branches": {
+      "main": [
+        [
+          {
+            "node": "🔧 BOOKING — Resolve Selected Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — Resolve Service Counter": {
+      "main": [
+        [
+          {
+            "node": "❓ IF — Counter Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — Handle Unavailable Service": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — Resolve Selected Branch": {
+      "main": [
+        [
+          {
+            "node": "🔧 BOOKING — Handle Unavailable Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Branches (Alternative)": {
+      "main": [
+        [
+          {
+            "node": "🔧 BOOKING — Find Alternative Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — Find Alternative Branches": {
+      "main": [
+        [
+          {
+            "node": "🌐 API — Get Branch Service Counters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Branch Service Counters": {
+      "main": [
+        [
+          {
+            "node": "🔧 BOOKING — Extract Valid Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — Extract Valid Branch": {
+      "main": [
+        [
+          {
+            "node": "🔀 IF — Valid Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 IF — Valid Branch": {
+      "main": [
+        [
+          {
+            "node": "🔧 BOOKING — Build Alternative Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🔧 BOOKING — No Alternative Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — Build Alternative Buttons": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ INIT — Normalize & Extract Request": {
+      "main": [
+        [
+          {
+            "node": "🔀 ROUTER — Main Action Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Available Slots": {
+      "main": [
+        [
+          {
+            "node": "🔧 BOOKING — Build Time Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — Build Time Buttons": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Create Appointment": {
+      "main": [
+        [
+          {
+            "node": "❓ IF — Booking Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get Branch Details": {
+      "main": [
+        [
+          {
+            "node": "🎉 VIEW — Booking Success Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ IF — Booking Created": {
+      "main": [
+        [
+          {
+            "node": "🌐 API — Get Branch Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🔧 BOOKING — Handle Create Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — Handle Create Error": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 API — Get My Appointments": {
+      "main": [
+        [
+          {
+            "node": "📄 VIEW — My Bookings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📄 VIEW — My Bookings": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 BOOKING — No Alternative Branches": {
+      "main": [
+        [
+          {
+            "node": "🔗 OUTPUT — Response Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3eb8175f-003d-4424-859f-306a3ddecc99",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "83149155cbeec9c59cecd286a7df124f279123310a30cd85834ccd1c32dc16d4"
+  },
+  "nodeGroups": [],
+  "id": "AWI1bSpdoRovabMA",
+  "tags": []
+}
