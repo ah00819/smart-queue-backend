@@ -117,7 +117,7 @@ class ServiceCounterAdmin(admin.ModelAdmin):
 
     @admin.display(ordering="service__name", description=_("Service"))
     def link_service(self, obj):
-        url = reverse("admin:appointment_service_change", args=[obj.service.id])
+        url = reverse("admin:api_service_change", args=[obj.service.id])
         return format_html('<a href="{}">{}</a>', url, obj.service.name)
 
 

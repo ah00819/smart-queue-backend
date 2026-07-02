@@ -117,7 +117,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
             )
             
         verification = SMSVerificationCode.generate_code_for_phone(phone=phone)
-        send_sms_message(phone_number=str(phone), message=f"Smart Queue Phone Verification code is {verification.code}")
+        send_sms_message(phone_number=str(phone), message=f"*{verification.code}* is your Smart Queue verification code.")
         
         return Response(
             {"detail": "Verification code has been sent successfully via SMS."},
@@ -167,7 +167,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
             )
         
         verification = SMSVerificationCode.generate_code_for_phone(phone=phone, user=user_obj)
-        send_sms_message(phone_number=str(phone), message=f"Your Smart Queue password reset code is: {verification.code}. It expires in 5 minutes.")
+        send_sms_message(phone_number=str(phone), message=f"*{verification.code}* is your Smart Queue password reset code.")
         
         return Response(
             {"detail": "Verification code has been successfully sent via SMS."},
