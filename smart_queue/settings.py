@@ -177,7 +177,6 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-
 GEMINI_API_KEY = env("GEMINI_API_KEY")
 
 # SMS Verification Code
