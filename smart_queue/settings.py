@@ -19,6 +19,15 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+<<<<<<< HEAD
+=======
+env = environ.Env(
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, ["127.0.0.1", "localhost","192.168.1.13","host.docker.internal"]),
+)
+
+environ.Env.read_env(BASE_DIR / '.env')
+>>>>>>> 136010e (integrate chatbot with backend APIs)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -99,7 +108,11 @@ DATABASES = {
         "NAME": "smart_queue",
         "HOST": "localhost",
         "USER": "root",
+<<<<<<< HEAD
         "PASSWORD": "123456",
+=======
+        "PASSWORD": "root",
+>>>>>>> 136010e (integrate chatbot with backend APIs)
     }
 }
 

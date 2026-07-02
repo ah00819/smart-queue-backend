@@ -113,7 +113,11 @@ class LeaveRequestViewSet(ModelViewSet):
 
 
 class ServiceViewSet(ModelViewSet):
-    queryset = Service.objects.all()
+    queryset = (
+        Service.objects.select_related("organization").prefetch_related(
+            "required_documents"
+        )
+    )
     serializer_class = ServiceSerializer
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = DefaultPagination

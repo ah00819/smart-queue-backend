@@ -100,6 +100,10 @@ class RequiredDocumentSerializer(serializers.ModelSerializer):
 
 class ServiceSerializer(serializers.ModelSerializer):
     required_documents = RequiredDocumentSerializer(many=True)
+    organization_name = serializers.CharField(
+        source="organization.name",
+        read_only=True,
+    )
 
     class Meta:
         model = Service
@@ -108,6 +112,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "organization",
+            "organization_name",
             "duration",
             "price",
             "currency",
